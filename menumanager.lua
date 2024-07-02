@@ -129,7 +129,7 @@ function AchievementItem:init(panel, index, mod)
 		self._progress_line:set_center_y(self._progress_bar:h() / 2)
 		
 		local full = self._progress_bar:w() - padding
-		local current_stat = IngameAchievements.awards.stats[persistent_stat(mod)] or 0
+		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(mod)] or 0
 		local max_stat = tweak_data.persistent_stat_unlocks[persistent_stat(mod)][1].at or 100
 		self._progress_line:set_w(full * (current_stat / max_stat))
 		self._progress_line:set_left(5)
