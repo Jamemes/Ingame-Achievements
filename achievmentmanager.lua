@@ -1,10 +1,16 @@
 local function award_achievement(id)
 	if not IngameAchievements.awards[id] then
-		if managers.hud and managers.hud.achievement_popup then
+	
+		local head = managers.localization:to_upper_text("hud_achieved_popup")
+		local text = managers.localization:to_upper_text("achievement_" .. id) .. "\n" .. managers.localization:text("achievement_".. id .. "_desc")
+		local icon = tweak_data.achievement.visual and tweak_data.achievement.visual[id] and tweak_data.achievement.visual[id].icon_id or "generic_achievement_icon"
+		
+		if HudChallengeNotification then
+			HudChallengeNotification.queue(head, text, icon)
+		elseif managers.hud and managers.hud.achievement_popup then
 			managers.hud:achievement_popup(id)
-		else
-			HudChallengeNotification.queue(managers.localization:to_upper_text("hud_achieved_popup"), managers.localization:to_upper_text("achievement_".. id) .. "\n" .. managers.localization:text("achievement_".. id .. "_desc"), "generic_achievement_icon")
 		end
+		
 		IngameAchievements.awards[id] = true
 		IngameAchievements:Save()
 	end

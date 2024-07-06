@@ -1,7 +1,9 @@
 Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", function(...)
 	local arm_for_shells = tweak_data.narrative:get_jobs_index().arm_for and 20 or 40
+	local cus = tweak_data.achievement and tweak_data.achievement.visual and "(CUS) " or ""
+	
 	LocalizationManager:add_localized_strings({
-		menu_achievements = "Achievements",
+		menu_ingame_achievements = cus .. "Achievements",
 		menu_achievements_sort_order = "Sort order",
 		menu_sort_alphabetic = "Alphabetic",
 		menu_trophy_unlocked = "Unlocked",
@@ -1638,7 +1640,7 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 
 	if Idstring("french"):key() == SystemInfo:language():key() then
 		LocalizationManager:add_localized_strings({
-			menu_achievements = "Succès",
+			menu_achievements = cus .. "Succès",
 			menu_achievements_sort_order = "Trier par",
 			menu_sort_alphabetic = "Nom",
 			menu_trophy_unlocked = "Débloqué",
@@ -3271,7 +3273,7 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 		})
 	elseif Idstring("russian"):key() == SystemInfo:language():key() then
 		LocalizationManager:add_localized_strings({
-			menu_achievements = "Достижения",
+			menu_achievements = cus .. "Достижения",
 			menu_achievements_sort_order = "Сортировать по",
 			menu_sort_alphabetic = "Алфавиту",
 			menu_trophy_unlocked = "Получен",
@@ -4906,7 +4908,7 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 		})
 	elseif Idstring("polish"):key() == SystemInfo:language():key() then
 		LocalizationManager:add_localized_strings({
-			menu_achievements = "Odblokowany",
+			menu_achievements = cus .. "Odblokowany",
 			menu_achievements_sort_order = "Sortowanie",
 			menu_sort_alphabetic = "Alfabetycznie",
 			menu_trophy_unlocked = "Odblokowany",

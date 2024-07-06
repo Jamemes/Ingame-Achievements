@@ -466,7 +466,7 @@ end
 
 function AchievementsGui:update_visible_mods(scroll_position, search_list, search_text)
 	self._panel:set_layer(200)
-	self._panel:child("title"):set_text(managers.localization:text("menu_achievements"))
+	self._panel:child("title"):set_text(managers.localization:text("menu_ingame_achievements"))
 	
 	self._libraries_show_button:set_visible(not BLTModsGui.show_libraries)
 	self._libraries_hide_button:set_visible(BLTModsGui.show_libraries)
@@ -602,7 +602,7 @@ Hooks:Add("CoreMenuData.LoadDataMenu", "AchievementsGui.CoreMenuData.LoadDataMen
 end)
 
 Hooks:Add("MenuManagerBuildCustomMenus", "WC_populate_categories", function(menu_manager, nodes)
-	MenuHelper:AddMenuItem(nodes.main, "ingame_achievements", "menu_achievements", "ingame_achievements", "divider_test2", "after")
-	MenuHelper:AddMenuItem(nodes.pause, "ingame_achievements", "menu_achievements", "ingame_achievements", "kick_player", "before")
-	MenuHelper:AddMenuItem(nodes.lobby, "ingame_achievements", "menu_achievements", "ingame_achievements", "kick_player", "before")
+	MenuHelper:AddMenuItem(nodes.main, "ingame_achievements", "menu_ingame_achievements", "", "divider_test2", "after")
+	MenuHelper:AddMenuItem(nodes.pause, "ingame_achievements", "menu_ingame_achievements", "", "edit_game_settings", "after")
+	MenuHelper:AddMenuItem(nodes.lobby, "ingame_achievements", "menu_ingame_achievements", "", "edit_game_settings", "after")
 end)
