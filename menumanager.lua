@@ -1,3 +1,21 @@
+if not MovieTheaterGui then
+	dofile(ModPath .. string.lower("MovieTheaterGui.lua"))
+end
+
+if not ToggleInputPanel then
+	ToggleInputPanel = ToggleInputPanel or class(ExtendedPanel)
+
+	function ToggleInputPanel:init(...)
+		ToggleInputPanel.super.init(self, ...)
+
+		self.enabled = true
+	end
+
+	function ToggleInputPanel:allow_input()
+		return ToggleInputPanel.super.allow_input(self) and self.enabled
+	end
+end
+
 _G.IngameAchievements = _G.IngameAchievements or {}
 IngameAchievements._mod_path = IngameAchievements._mod_path or ModPath
 IngameAchievements._setting_path = SavePath .. "IngameAchievements.json"
@@ -26,9 +44,6 @@ end
 
 Load()
 
-AchievementsGui = AchievementsGui or class(BLTModsGui)
-AchievementItem = AchievementItem or class(BLTModItem)
-
 local function make_fine_text(text)
 	local x, y, w, h = text:text_rect()
 	text:set_size(w, h)
@@ -43,98 +58,90 @@ local function persistent_stat(ach)
 	end
 end
 
-local padding = 10
-function AchievementItem:init(panel, index, mod)
-	local medium_font = tweak_data.menu.pd2_medium_font
-	local small_font = tweak_data.menu.pd2_small_font
+AchievementItem = AchievementItem or class(MovieListItem)
+AchievementsGui = AchievementsGui or class(MovieTheaterGui)
+MenuHelper:AddComponent("view_achievements", AchievementsGui)
 
-	local medium_font_size = tweak_data.menu.pd2_medium_font_size
-	local small_font_size = tweak_data.menu.pd2_small_font_size
+AchievementItem.HEIGHT = tweak_data.menu.pd2_medium_font_size * 2 + 10
+AchievementItem.TEXT_OFFSET = 0
+AchievementItem.NORMAL_COLOR = tweak_data.screen_colors.button_stage_3
 
-	local w = (panel:w() - (self.layout.x + 1) * padding) / self.layout.x
-	local h = ((panel:h() - (self.layout.y + 1) * padding) / self.layout.y) * 0.5 - (padding * 0.5)
-	local column, row = self:_get_col_row(index)
-	local icon_size = 32
+local large_font = tweak_data.menu.pd2_medium_font
+local large_font_size = tweak_data.menu.pd2_medium_font_size
+local movie_item_font = tweak_data.menu.pd2_medium_font
+local movie_item_font_size = tweak_data.menu.pd2_medium_font_size
+
+function AchievementItem:create_achievement_gui(item, unlocked)
+	self._achievement_gui = self._panel:panel()
 	
-	local locked_color = Color("A70000")
-	local bg_color = tweak_data.screen_colors.button_stage_3
-	local text_color = Color.white
-	if IngameAchievements.awards[mod] == false then
-		bg_color = locked_color
-		text_color = Color.white
-	elseif not IngameAchievements.awards[mod] then
-		bg_color = Color.black
-		text_color = Color(0.3, 0.3, 0.3)
-	end
-
-	-- Main panel
-	self._panel = panel:panel({
-		x = (w + padding) * (column - 1),
-		y = (h + padding) * (row - 1),
-		w = w,
-		h = h,
-		layer = 10
-	})
-
-	-- Background
-	local first_background = self._panel:rect({
-		color = bg_color,
-		alpha = 0.5,
-		blend_mode = "normal",
-		layer = -1
-	})
-
-	self._background = self._panel:rect({
-		color = Color.white,
-		alpha = 0,
-		blend_mode = "add",
+	local title_color = unlocked and tweak_data.screen_colors.text or self.NORMAL_COLOR
+	local desc_color = unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(0.6)
+	self._title = self._achievement_gui:text({
+		text = managers.localization:text("achievement_".. item.name),
+		font = movie_item_font,
+		font_size = movie_item_font_size,
+		color = title_color,
+		x = self.HEIGHT,
+		y = self.TEXT_OFFSET + 5,
 		layer = 1
 	})
-	BoxGuiObject:new(self._panel, {sides = {1, 1, 1, 1}})
+	make_fine_text(self._title)
 
-	self._panel:bitmap({
-		texture = "guis/textures/test_blur_df",
-		w = self._panel:w(),
-		h = self._panel:h(),
-		render_template = "VertexColorTexturedBlur3D",
-		layer = -1,
-		halign = "scale",
-		valign = "scale"
+	self._kindof = self._achievement_gui:text({
+		text = managers.localization:text("achievement_".. item.name .."_desc"),
+		font = movie_item_font,
+		font_size = movie_item_font_size / 1.75,
+		color = desc_color,
+		x = self.HEIGHT,
+		layer = 1
 	})
-		
-	if IngameAchievements.awards[mod] ~= true and persistent_stat(mod) then
-		self._progress_bar = self._panel:panel({
-			h = self._panel:h() / 4.5,
+	make_fine_text(self._title)
+	self._kindof:set_top(self._title:bottom() + 5)
+	
+	self._time = self._achievement_gui:text({
+		text = unlocked and (IngameAchievements.awards.time and IngameAchievements.awards.time[item.name] or "--/--/--") or "",
+		font = movie_item_font,
+		font_size = movie_item_font_size,
+		color = title_color,
+	})
+	make_fine_text(self._time)
+	self._time:set_center_y(self.HEIGHT / 2)
+	self._time:set_right(self._achievement_gui:w() - 20)
+	
+	if not unlocked and persistent_stat(item.name) then
+		local padding = 10
+		local progress_bar = self._achievement_gui:panel({
+			h = self._achievement_gui:h() / 2.3,
 		})
-		self._progress_bar:set_width(self._panel:w() - self._progress_bar:x() - (padding * 3))
-		self._progress_bar:set_center_x(math.round(self._panel:w() * 0.5))
-		self._progress_bar:set_bottom(math.round(self._panel:h() - padding))
+		progress_bar:set_width(self._achievement_gui:w() / 5)
+		progress_bar:set_right(self._achievement_gui:w() - 20)
+		progress_bar:set_center_y(self.HEIGHT / 2)
 		
-		self._progress_bar:rect({
+		progress_bar:rect({
 			color = Color.black,
 			blend_mode = "normal",
 			alpha = 0.3,
 			layer = 1
 		})
 
-		BoxGuiObject:new(self._progress_bar, {sides = {2, 2, 2, 2}})
+		BoxGuiObject:new(progress_bar, {sides = {2, 2, 2, 2}})
 	
-		self._progress_line = self._progress_bar:rect({
-			h = self._progress_bar:h() - padding,
+		self._progress_line = progress_bar:rect({
+			h = progress_bar:h() - padding,
 			color = tweak_data.screen_colors.button_stage_3,
 			alpha = 1,
 			blend_mode = "add",
 			layer = 1
 		})
-		self._progress_line:set_center_y(self._progress_bar:h() / 2)
+		self._progress_line:set_center_y(progress_bar:h() / 2)
 		
-		local full = self._progress_bar:w() - padding
-		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(mod)] or 0
-		local max_stat = tweak_data.persistent_stat_unlocks[persistent_stat(mod)][1].at or 100
+		local full = progress_bar:w() - padding
+		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(item.name)] or 0
+		local max_stat = tweak_data.persistent_stat_unlocks[persistent_stat(item.name)][1].at or 100
 		self._progress_line:set_w(full * (current_stat / max_stat))
 		self._progress_line:set_left(5)
 		
-		local progress = self._progress_bar:text({
+		local progress = progress_bar:text({
 			font = tweak_data.menu.pd2_small_font,
 			font_size = tweak_data.menu.pd2_small_font_size,
 			text = "(" .. current_stat .. "/" .. max_stat .. ")",
@@ -142,448 +149,272 @@ function AchievementItem:init(panel, index, mod)
 			layer = 3
 		})
 		make_fine_text(progress)
-		progress:set_center_x(self._progress_bar:w() / 2)
-		progress:set_center_y(self._progress_bar:h() / 2)
+		progress:set_center_x(progress_bar:w() / 2)
+		progress:set_center_y(progress_bar:h() / 2)
+	end
+
+	local function set_color(unlock, odd)
+		local alpha = odd and 0.25 or 0.35
+		if unlock then
+			return tweak_data.screen_colors.button_stage_3:with_alpha(alpha)
+		else
+			if unlock == false then
+				return Color("A70000"):with_alpha(alpha)
+			else
+				return Color.black:with_alpha(odd and 0.3 or 0.4)
+			end
+		end
 	end
 	
-	-- Mod name
-	local mod_name = self._panel:text({
-		name = "mod_name",
-		w = self._panel:w() - padding * 2,
-		font_size = medium_font_size,
-		font = medium_font,
-		layer = 10,
-		blend_mode = "add",
-		color = text_color,
-		text = managers.localization:text("achievement_".. mod),
-		align = "center",
-		vertical = "top",
-		wrap = true,
-		word_wrap = true
+	self._background_color = self._achievement_gui:rect({
+		color = set_color(unlocked, item.index % 2 ~= 0)
 	})
-	local name_padding = 4 + padding
-	mod_name:set_x(name_padding)
-	mod_name:set_width(self._panel:w() - mod_name:x() - name_padding)
-	mod_name:set_top(math.round(self._panel:h() * 0.1))
-	local _, _, nw, nh = mod_name:text_rect()
-	mod_name:set_h(nh)
+end
+	
+function AchievementItem:init(parent, item, owner)
+	local row_w = parent:row_w()
 
-	-- Mod description
-	local mod_desc = self._panel:text({
-		name = "mod_desc",
-		font_size = small_font_size,
-		font = small_font,
-		layer = 10,
-		blend_mode = "add",
-		color = text_color,
-		text = managers.localization:text("achievement_".. mod .. "_desc"),
-		align = "left",
-		vertical = "top",
-		wrap = true,
-		word_wrap = true,
-		w = self._panel:w() - padding * 2
+	MovieListItem.super.init(self, parent, {
+		input = true,
+		h = self.HEIGHT,
+		w = row_w
 	})
-	mod_desc:set_top(math.round(mod_name:bottom()) + 5)
-	local _, _, dw, dh = mod_desc:text_rect()
-	mod_desc:set_size(dw, math.min(dh, self._panel:h() - mod_desc:y() - padding))
-	mod_desc:set_center_x(math.round(self._panel:w() * 0.5))
 
-	local progress_bar_h = alive(self._progress_bar) and self._progress_bar:h() + padding or 0
-	while dh + nh + progress_bar_h > (self._panel:h() - padding * 2) - 5 do
-		mod_name:set_font_size(mod_name:font_size() * 0.99)
-		make_fine_text(mod_name)
-		
-		mod_name:set_w(self._panel:w() - padding * 2)
-		mod_name:set_center_x(self._panel:w() / 2)
-		
-		mod_desc:set_font_size(mod_desc:font_size() * 0.99)
-		make_fine_text(mod_desc)
-		
-		mod_desc:set_w(self._panel:w() - padding * 2)
-		mod_desc:set_center_x(self._panel:w() / 2)
-		
-		mod_desc:set_top(math.round(mod_name:bottom()) + 5)
+	self._panel:set_layer(1)
+	
+	self._owner = owner
+	self._item = item
+	
+	self._click = self:panel({name = item.name})
 
-		_, _, nw, nh = mod_name:text_rect()
-		_, _, dw, dh = mod_desc:text_rect()
-	end
-		
-	self._parameters = {callback = function()
-		local achievement = IngameAchievements.awards[mod]
-		if achievement ~= nil then
-			if achievement then
-				first_background:set_color(locked_color)
-				IngameAchievements.awards[mod] = false
+	self._click:set_w(self:w())
+
+	self._select_panel = self._panel:panel({
+		layer = self:layer() - 1,
+		w = self:w(),
+		h = self:h()
+	})
+
+	self._select_panel:set_lefttop(self:lefttop())
+	BoxGuiObject:new(self._select_panel, {
+		sides = {
+			2,
+			2,
+			2,
+			2
+		}
+	})
+	
+	self:_selected_changed(false)
+	
+	self:create_achievement_gui(item, IngameAchievements.awards[item.name])
+end
+
+function AchievementItem:_selected_changed(state)
+	self._select_panel:set_visible(state)
+end
+
+function AchievementItem:mouse_clicked(o, button, x, y)
+	if button == Idstring("0") and self._click:inside(x, y) then
+		local unlocked = IngameAchievements.awards[self._click:name()]
+		if unlocked ~= nil then
+			if unlocked then
+				IngameAchievements.awards[self._click:name()] = false
 			else
-				first_background:set_color(tweak_data.screen_colors.button_stage_3)
-				IngameAchievements.awards[mod] = true
+				IngameAchievements.awards[self._click:name()] = true
 			end
+
+			self._achievement_gui:clear()
+			self:create_achievement_gui(self._item, IngameAchievements.awards[self._click:name()])
 			IngameAchievements:Save()
 		end
-	end,
-	callback_2 = function()
-		if managers.localization:exists("achievement_".. mod .. "_additional") then
-			local dialog_data = {
-				text = managers.localization:text("achievement_".. mod .. "_additional")
-			}
-			local ok_button = {
-				text = managers.localization:text("dialog_ok")
-			}
-			dialog_data.button_list = {
-				ok_button
-			}
-			
-			managers.system_menu:show(dialog_data)
-		end
-	end
-	}
-end
 
-function AchievementItem:set_highlight(enabled, no_sound)
-	if self._enabled ~= enabled then
-		self._enabled = enabled
-		self._background:set_alpha(enabled and 0.1 or 0)
-		if enabled and not no_sound then
-			managers.menu_component:post_event("highlight")
-		end
-	end
-end
-
-function AchievementItem:parameters()
-	return self._parameters
-end
-
-function AchievementsGui:_setup()
-	local padding = 10
-	local large_font = tweak_data.menu.pd2_large_font
-	local large_font_size = tweak_data.menu.pd2_large_font_size
-	local small_font_size = tweak_data.menu.pd2_small_font_size
-
-	local function make_fine_text_aligning(text)
-		-- Make fine text, but use the text rect X and Y in set_position
-		local x, y, w, h = text:text_rect()
-		text:set_size(w, h)
-		text:set_position(math.round(x), math.round(y))
+		return true
 	end
 
-	-- Background
-	self._fullscreen_panel:bitmap({
+	AchievementItem.super.mouse_clicked(self, o, button, x, y)
+end
+
+function AchievementsGui:init(ws, fullscreen_ws, node)
+	MovieTheaterGui.super.init(self, ws:panel())
+
+	self._panel:set_layer(200)
+	self._panel:bitmap({
 		texture = "guis/textures/test_blur_df",
-		w = self._fullscreen_panel:w(),
-		h = self._fullscreen_panel:h(),
-		render_template = "VertexColorTexturedBlur3D",
-		layer = 1,
+		layer = -1,
 		halign = "scale",
-		valign = "scale"
+		render_template = "VertexColorTexturedBlur3D",
+		valign = "scale",
+		w = fullscreen_ws:panel():w(),
+		h = fullscreen_ws:panel():h()
 	})
 	
-	self._background = self._fullscreen_panel:rect({
-		color = Color.black,
-		alpha = 0.2,
-		layer = 1
+	self._music_volume = (managers.user:get_setting("music_volume") or 100) / 100
+	self._sfx_volume = (managers.user:get_setting("sfx_volume") or 100) / 100
+	self._ws = ws
+	self._fullscreen_ws = fullscreen_ws
+	self._node = node
+	self._main_panel = ToggleInputPanel:new(self, {
+		input = true
 	})
 
-	self._panel:set_layer(10)
+	local total_ach = tweak_data.achievement and tweak_data.achievement.visual or managers.achievment.achievments
+	self._achievements = table.sorted_copy(table.map_keys(total_ach), function (ach1, ach2)
+		local award_score_1, award_score_2 = type(IngameAchievements.awards[ach1]) == "boolean" and 0 or 10000, type(IngameAchievements.awards[ach2]) == "boolean" and 0 or 10000
+		local name_score_1 = managers.localization:text("achievement_".. ach1):lower() < managers.localization:text("achievement_".. ach2):lower() and 1 or 0
+		local name_score_2 = not name_score_1 and 1 or 0
+		
+		return award_score_1 + name_score_1 > award_score_2 + name_score_2
+	end)
+
+	if SearchBoxGuiObject and managers.menu:is_pc_controller() then
+		self._searchbox = SearchBoxGuiObject:new(self._panel, self._ws, self._saved_search)
+		self._searchbox.panel:set_x(10)
+		self._searchbox.panel:set_y(self._panel:h() - 35)
+		self._searchbox:register_callback(callback(self, self, "update_achievements_list", false))
+	end
 	
-	-- Back button
-	local back_button = self._panel:text({
-		name = "back",
-		text = managers.localization:text("menu_back"),
-		align = "right",
-		vertical = "bottom",
-		font_size = tweak_data.menu.pd2_large_font_size,
+	self:_create_achievements_list()
+end
+
+function AchievementsGui:_create_achievements_list()
+	local title_text = self._main_panel:text({
+		layer = 1,
+		text = managers.localization:text("menu_ingame_achievements"),
 		font = tweak_data.menu.pd2_large_font,
-		color = tweak_data.screen_colors.button_stage_3,
-		layer = 40,
-		blend_mode = "add"
+		font_size = tweak_data.menu.pd2_large_font_size,
+		color = tweak_data.screen_colors.text
 	})
-	
-	make_fine_text(back_button)
-	back_button:set_right(self._panel:w() - 10)
-	back_button:set_bottom(self._panel:h() - 10)
-	back_button:set_visible(managers.menu:is_pc_controller())
-	self._back_button = back_button
-	self._custom_buttons[back_button] = {
-		clbk = function()
-			managers.menu:back()
-			return true
-		end
-	}
 
-	local bg_back = self._fullscreen_panel:text({
-		name = "back_button",
-		text = utf8.to_upper(managers.localization:text("menu_back")),
-		h = 90,
-		align = "right",
-		vertical = "bottom",
-		blend_mode = "add",
-		font_size = tweak_data.menu.pd2_massive_font_size,
-		font = tweak_data.menu.pd2_massive_font,
-		color = tweak_data.screen_colors.button_stage_3,
-		alpha = 0.4,
-		layer = 1
-	})
-	local x, y = managers.gui_data:safe_to_full_16_9(self._panel:child("back"):world_right(), self._panel:child("back"):world_center_y())
-	bg_back:set_world_right(x)
-	bg_back:set_world_center_y(y)
-	bg_back:move(13, -9)
-	
-	-- Title
-	local title = self._panel:text({
-		name = "title",
+	make_fine_text(title_text)
+	local ach_track = self._main_panel:text({
+		name = "ach_track",
 		x = padding,
 		y = padding,
-		font_size = large_font_size,
-		font = large_font,
+		font_size = tweak_data.menu.pd2_small_font_size,
+		font = tweak_data.menu.pd2_small_font,
 		h = large_font_size,
 		layer = 10,
 		blend_mode = "add",
 		color = tweak_data.screen_colors.title,
-		text = managers.localization:text("blt_installed_mods"),
+		text = managers.localization:text("menu_trophy_unlocked") .. ": (0 / 0)",
 		align = "left",
 		vertical = "top",
 	})
+	make_fine_text(ach_track)
+	ach_track:set_top(title_text:bottom() + 5)
 
-	-- Toggle libraries visible button
-	local padding = 10
-	local params = {
-		x = padding,
-		y = padding,
-		width = self._panel:w() - padding * 2,
-		height = large_font_size,
-		color = tweak_data.screen_colors.button_stage_3,
-		font = tweak_data.menu.pd2_small_font,
-		font_size = tweak_data.menu.pd2_small_font_size,
-		vertical = "bottom",
-		align = "right"
-	}
+	local function count(v, func)
+		local i = 0
 
-	local function customize(changes)
-		return table.map_append(table.map_copy(params), changes)
+		for k, item in pairs(v) do
+			if func(item, k) then
+				i = i + 1
+			end
+		end
+
+		return i
 	end
+	
+	local num_ach_unlocked = count(IngameAchievements.awards, function(ach) return type(ach) == "boolean" end) or 0
+	local num_ach_total = table.size(self._achievements) or 0
+	ach_track:set_text(managers.localization:text("menu_trophy_unlocked") .. string.format(": (%d / %d)", num_ach_unlocked, num_ach_total))
+	make_fine_text(ach_track)
+	
+	local t_y = title_text:bottom() + 30
 
-	-- Count the number of libraries installed
-	local libs_count = 0
-	for i, mod in ipairs(BLT.Mods:Mods()) do
-		if mod:IsLibrary() then
-			libs_count = libs_count + 1
-		end
-	end
-
-	-- Add the libraries label
-	local libraries_text = self._panel:text(customize({
-		text = managers.localization:to_upper_text("menu_achievements_sort_order"),
-		color = tweak_data.screen_colors.text
-	}))
-
-	-- Shift the show and hide buttons to the left of the libraries label
-	make_fine_text_aligning(libraries_text)
-	params.width = libraries_text:x() - params.x - 4 -- 4px padding
-
-	self._libraries_show_button = self._panel:text(customize({
-		text = managers.localization:to_upper_text("menu_sort_alphabetic")
-	}))
-
-	self._libraries_hide_button = self._panel:text(customize({
-		text = managers.localization:to_upper_text("menu_trophy_unlocked")
-	}))
-
-	make_fine_text_aligning(self._libraries_show_button)
-	make_fine_text_aligning(self._libraries_hide_button)
-
-	self._custom_buttons[self._libraries_show_button] = {
-		clbk = function()
-			BLTModsGui.show_libraries = true
-			self:update_visible_mods()
-			return true
-		end
-	}
-	self._custom_buttons[self._libraries_hide_button] = {
-		clbk = function()
-			BLTModsGui.show_libraries = false
-			self:update_visible_mods()
-			return true
-		end
-	}
-
-	-- Set up the toggle icons button
-	params.width = self._panel:w() - padding * 2
-	params.height = params.height - small_font_size
-
-	local icons_text = self._panel:text(customize({
-		text = managers.localization:to_upper_text("menu_trophy_unlocked"),
-		color = tweak_data.screen_colors.text
-	}))
-
-	-- Shift the show and hide buttons to the left of the label
-	make_fine_text_aligning(icons_text)
-	params.width = icons_text:x() - params.x - 4 -- 4px padding
-
-	self._mod_icons_show_button = self._panel:text(customize({
-		text = managers.localization:to_upper_text("menu_button_show")
-	}))
-
-	self._mod_icons_hide_button = self._panel:text(customize({
-		text = managers.localization:to_upper_text("menu_button_hide")
-	}))
-
-	make_fine_text_aligning(self._mod_icons_show_button)
-	make_fine_text_aligning(self._mod_icons_hide_button)
-
-	self._custom_buttons[self._mod_icons_show_button] = {
-		clbk = function()
-			BLTModsGui.show_mod_icons = true
-			self:update_visible_mods()
-			return true
-		end
-	}
-	self._custom_buttons[self._mod_icons_hide_button] = {
-		clbk = function()
-			BLTModsGui.show_mod_icons = false
-			self:update_visible_mods()
-			return true
-		end
-	}
-
-	-- Set up search box
-	if SearchBoxGuiObject then
-		self._searchbox = SearchBoxGuiObject:new(self._panel, self._ws)
-		self._searchbox.panel:set_x(10)
-		self._searchbox.panel:set_y(back_button:y())
-
-		self._searchbox:register_callback(callback(self, self, "update_visible_mods", false))
-	end
-
-	-- Mods scroller
-	local scroll_panel = self._panel:panel({
-		h = self._panel:h() - large_font_size * 2 - padding * 2,
-		y = large_font_size
+	self._scroll = ScrollItemList:new(self._main_panel, {
+		scrollbar_padding = 10,
+		input_focus = true,
+		bar_minimum_size = 16,
+		input = true,
+		padding = 0,
+		y = t_y,
+		h = self._main_panel:h() - t_y - 50,
+		w = self._main_panel:w()
+	}, {
+		padding = 0
 	})
-	self._scroll = ScrollablePanel:new(scroll_panel, "mods_scroll", {})
 
-	self:update_visible_mods(BLTModsGui.last_y_position)
+	BoxGuiObject:new(self._scroll:scroll_item():scroll_panel(), {
+		w = self._scroll:canvas():w(),
+		sides = {
+			1,
+			1,
+			1,
+			1
+		}
+	})
+
+	local back_panel = self._main_panel:panel({
+		layer = -1,
+		w = self._scroll:canvas():w(),
+		h = self._scroll:h()
+	})
+
+	back_panel:set_lefttop(self._scroll:lefttop())
+	back_panel:rect({
+		color = Color.black:with_alpha(0.4)
+	})
+
+	self:update_achievements_list()
 end
 
-function AchievementsGui:update_visible_mods(scroll_position, search_list, search_text)
-	self._panel:set_layer(200)
-	self._panel:child("title"):set_text(managers.localization:text("menu_ingame_achievements"))
-	
-	self._libraries_show_button:set_visible(not BLTModsGui.show_libraries)
-	self._libraries_hide_button:set_visible(BLTModsGui.show_libraries)
+function AchievementsGui:update_achievements_list(scroll_position, search_list, search_text)
+	if search_text then
+		search_text = search_text:lower()
+	end
 
-	self._mod_icons_show_button:set_visible(not BLTModsGui.show_mod_icons)
-	self._mod_icons_hide_button:set_visible(BLTModsGui.show_mod_icons)
-	
-	-- Save the position of the scroll panel
-	AchievementsGui.last_y_position = scroll_position or self._scroll:canvas():y() * -1
+	self._scroll:clear()
+	if self._achievements then
+		local index = 0
+		for _, name in pairs(self._achievements) do
+			if string.is_nil_or_empty(search_text) or managers.localization:text("achievement_".. name):lower():find(search_text) or managers.localization:text("achievement_".. name .. "_desc"):lower():find(search_text) then
+				index = index + 1
+				local item = {
+					index = index,
+					name = name
+				}
 
-	-- Clear the scroll panel
-	self._scroll:canvas():clear()
-	self._scroll:update_canvas_size() -- Ensure the canvas always starts at it's maximum size
-	self._buttons = {}
-	
-	local achievements = table.sorted_copy(table.map_keys(managers.achievment.achievments), function (mod1, mod2)
-		if BLTModsGui.show_libraries then
-			return tostring(IngameAchievements.awards[mod1]) > tostring(IngameAchievements.awards[mod2])
-		end
-		
-		if BLTModsGui.show_mod_icons then
-			return tostring(IngameAchievements.awards[mod1]) < tostring(IngameAchievements.awards[mod2])
-		end
-		
-		return managers.localization:text("achievement_".. mod1):lower() < managers.localization:text("achievement_".. mod2):lower()
-	end)
-
-	-- Create mod boxes
-	for _, mod in ipairs(achievements) do
-		if string.is_nil_or_empty(search_text) or managers.localization:text("achievement_".. mod):lower():find(search_text) or managers.localization:text("achievement_".. mod .. "_desc"):lower():find(search_text) then
-			local i = #self._buttons
-			
-			i = i + 1
-			
-			if BLTModsGui.show_mod_icons then
-				if not IngameAchievements.awards[mod] then
-					local item = AchievementItem:new(self._scroll:canvas(), i, mod)
-					table.insert(self._buttons, item)
-				end
-			else
-				local item = AchievementItem:new(self._scroll:canvas(), i, mod)
-				table.insert(self._buttons, item)
+				self._scroll:add_item(AchievementItem:new(self._scroll:canvas(), item, self), true)
 			end
 		end
 	end
-	
-	-- Update scroll size
-	self._scroll:update_canvas_size()
-
-	self._scroll:scroll_to(AchievementsGui.last_y_position)
 end
 
-function AchievementsGui:mouse_pressed(button, x, y)
-	if managers.menu_scene and managers.menu_scene:input_focus() then
-		return false
-	end
-
-	local result
-
+Hooks:PreHook(AchievementsGui, "mouse_moved", "IngameAchievements.mouse_moved", function(self, o, x, y)
 	if self._searchbox then
-		result = self._searchbox:mouse_pressed(button, x, y)
-	end
+		local used, pointer = self._searchbox:mouse_moved(o, x, y)
 
-	if alive(self._scroll) and not result then
-		result = self._scroll:mouse_pressed(button, x, y)
-	end
-
-	if button == Idstring("0") and not result then
-		for button, data in pairs(self._custom_buttons) do
-			if alive(button) and button:visible() and button:inside(x, y) then
-				return data.clbk()
-			end
+		if used then
+			return used, pointer
 		end
+	end
+end)
 
-		if alive(self._scroll) and self._scroll:panel():inside(x, y) then
-			for _, item in ipairs(self._buttons) do
-				if item:inside(x, y) then
-					if item.parameters then
-						local clbk = item:parameters().callback
-						if clbk then
-							clbk()
-						end
-					end
+Hooks:PreHook(AchievementsGui, "mouse_pressed", "IngameAchievements.mouse_pressed", function(self, button, x, y)
+	if self._searchbox and self._searchbox:mouse_pressed(button, x, y) then
+		return
+	end
+end)
 
-					return true
-				end
-			end
-		end
+Hooks:PreHook(AchievementsGui, "confirm_pressed", "IngameAchievements.confirm_pressed", function(self)
+	if self._searchbox and self._searchbox:input_focus() and managers.menu:is_pc_controller() then
+		self._searchbox:disconnect_search_input()
+
+		return
+	end
+end)
+
+function AchievementsGui:special_btn_pressed(button)
+	local search_box_input_focus = self._searchbox and self._searchbox:input_focus()
+	if search_box_input_focus then
+		return search_box_input_focus
 	end
 	
-	if button == Idstring("1") and not result then
-		for button, data in pairs(self._custom_buttons) do
-			if alive(button) and button:visible() and button:inside(x, y) then
-				return data.clbk()
-			end
-		end
-
-		if alive(self._scroll) and self._scroll:panel():inside(x, y) then
-			for _, item in ipairs(self._buttons) do
-				if item:inside(x, y) then
-					if item.parameters then
-						local clbk = item:parameters().callback_2
-						if clbk then
-							clbk()
-						end
-					end
-
-					return true
-				end
-			end
-		end
-	end
-	
-	return result
+	return AchievementsGui.super.special_btn_pressed(self, button)
 end
 
-MenuHelper:AddComponent("view_achievements", AchievementsGui)
 Hooks:Add("CoreMenuData.LoadDataMenu", "AchievementsGui.CoreMenuData.LoadDataMenu", function(menu_id, menu)
 	local new_node = {
 		["_meta"] = "node",
@@ -603,6 +434,6 @@ end)
 
 Hooks:Add("MenuManagerBuildCustomMenus", "WC_populate_categories", function(menu_manager, nodes)
 	MenuHelper:AddMenuItem(nodes.main, "ingame_achievements", "menu_ingame_achievements", "", "divider_test2", "after")
-	MenuHelper:AddMenuItem(nodes.pause, "ingame_achievements", "menu_ingame_achievements", "", "edit_game_settings", "after")
-	MenuHelper:AddMenuItem(nodes.lobby, "ingame_achievements", "menu_ingame_achievements", "", "edit_game_settings", "after")
+	MenuHelper:AddMenuItem(nodes.pause, "ingame_achievements", "menu_ingame_achievements", "", "divider_test2", "after")
+	MenuHelper:AddMenuItem(nodes.lobby, "ingame_achievements", "menu_ingame_achievements", "", "divider_test2", "after")
 end)

@@ -1,11 +1,9 @@
 Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", function(...)
 	local arm_for_shells = tweak_data.narrative:get_jobs_index().arm_for and 20 or 40
-	local cus = tweak_data.achievement and tweak_data.achievement.visual and "(CUS) " or ""
+	local cus = tweak_data.achievement and tweak_data.achievement.visual and "InGame " or ""
 	
 	LocalizationManager:add_localized_strings({
 		menu_ingame_achievements = cus .. "Achievements",
-		menu_achievements_sort_order = "Sort order",
-		menu_sort_alphabetic = "Alphabetic",
 		menu_trophy_unlocked = "Unlocked",
 		hud_achieved_popup = "ACHIEVEMENT UNLOCKED!",
 	
@@ -1639,10 +1637,14 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 	})
 
 	if Idstring("french"):key() == SystemInfo:language():key() then
+		if cus ~= "" then
+			cus = "Succès dans le jeu"
+		else
+			cus = "Succès"
+		end
+		
 		LocalizationManager:add_localized_strings({
-			menu_achievements = cus .. "Succès",
-			menu_achievements_sort_order = "Trier par",
-			menu_sort_alphabetic = "Nom",
+			menu_achievements = cus,
 			menu_trophy_unlocked = "Débloqué",
 			hud_achieved_popup = "SUCCÈS DÉBLOQUÉ !",
 					
@@ -3272,11 +3274,13 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 			achievement_grv_4_desc = [[Terminez n'importe quel casse discrètement en utilisant uniquement des armes du DLC Gage Russian Weapon Pack. ]],
 		})
 	elseif Idstring("russian"):key() == SystemInfo:language():key() then
+		if cus ~= "" then
+			cus = "Игровые "
+		end
+		
 		LocalizationManager:add_localized_strings({
 			menu_achievements = cus .. "Достижения",
-			menu_achievements_sort_order = "Сортировать по",
-			menu_sort_alphabetic = "Алфавиту",
-			menu_trophy_unlocked = "Получен",
+			menu_trophy_unlocked = "Получено",
 			hud_achieved_popup = "ДОСТИЖЕНИЕ ОТКРЫТО!",
 
 			achievement_bob_2_additional = [[Для выполнения достижения необходимо играть с самого начала контракта.]],
@@ -4907,10 +4911,14 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 
 		})
 	elseif Idstring("polish"):key() == SystemInfo:language():key() then
+		if cus ~= "" then
+			cus = "Osiągnięcia w grze"
+		else
+			cus = "Odblokowany"
+		end
+		
 		LocalizationManager:add_localized_strings({
-			menu_achievements = cus .. "Odblokowany",
-			menu_achievements_sort_order = "Sortowanie",
-			menu_sort_alphabetic = "Alfabetycznie",
+			menu_achievements = cus,
 			menu_trophy_unlocked = "Odblokowany",
 			hud_achieved_popup = "ODBLOKOWANO OSIĄGNIĘCIE!",
 					
