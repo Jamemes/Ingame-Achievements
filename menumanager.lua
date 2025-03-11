@@ -36,12 +36,8 @@ local function Load()
 			IngameAchievements.awards[k] = v
 		end
 		file:close()
-	else
-		IngameAchievements.awards = {}
-		IngameAchievements:Save()
 	end
 end
-
 Load()
 
 local function make_fine_text(text)
@@ -258,7 +254,14 @@ function AchievementsGui:init(ws, fullscreen_ws, node)
 		input = true
 	})
 
-	local total_ach = tweak_data.achievement and tweak_data.achievement.visual or managers.achievment.achievments
+	local ach_exist = {}
+	for k, v in pairs(managers.achievment.achievments) do
+		if managers.localization:exists("achievement_".. k) then
+			ach_exist[k] = v
+		end
+	end
+
+	local total_ach = tweak_data.achievement and tweak_data.achievement.visual or ach_exist
 	self._achievements = table.sorted_copy(table.map_keys(total_ach), function (ach1, ach2)
 		local award_score_1, award_score_2 = type(IngameAchievements.awards[ach1]) == "boolean" and 0 or 10000, type(IngameAchievements.awards[ach2]) == "boolean" and 0 or 10000
 		local name_score_1 = managers.localization:text("achievement_".. ach1):lower() < managers.localization:text("achievement_".. ach2):lower() and 1 or 0
@@ -304,11 +307,11 @@ function AchievementsGui:_create_achievements_list()
 	make_fine_text(ach_track)
 	ach_track:set_top(title_text:bottom() + 5)
 
-	local function count(v, func)
+	local function count(v, total)
 		local i = 0
 
 		for k, item in pairs(v) do
-			if func(item, k) then
+			if type(item) == "boolean" and table.contains(total, k) then
 				i = i + 1
 			end
 		end
@@ -316,7 +319,7 @@ function AchievementsGui:_create_achievements_list()
 		return i
 	end
 	
-	local num_ach_unlocked = count(IngameAchievements.awards, function(ach) return type(ach) == "boolean" end) or 0
+	local num_ach_unlocked = count(IngameAchievements.awards, self._achievements)
 	local num_ach_total = table.size(self._achievements) or 0
 	ach_track:set_text(managers.localization:text("menu_trophy_unlocked") .. string.format(": (%d / %d)", num_ach_unlocked, num_ach_total))
 	make_fine_text(ach_track)
@@ -420,13 +423,13 @@ Hooks:Add("CoreMenuData.LoadDataMenu", "AchievementsGui.CoreMenuData.LoadDataMen
 		["_meta"] = "node",
 		["name"] = "ingame_achievements",
 		["menu_components"] = "view_achievements",
-		["back_callback"] = "perform_blt_save",
+		["back_callback"] = "save_progress",
 		["no_item_parent"] = true,
 		["no_menu_wrapper"] = true,
 		["scene_state"] = menu_id == "start_menu" and "crew_management",
 		[1] = {
 			["_meta"] = "default_item",
-			["name"] = back
+			["name"] = "back"
 		}
 	}
 	table.insert(menu, new_node)
@@ -434,6 +437,6 @@ end)
 
 Hooks:Add("MenuManagerBuildCustomMenus", "WC_populate_categories", function(menu_manager, nodes)
 	MenuHelper:AddMenuItem(nodes.main, "ingame_achievements", "menu_ingame_achievements", "", "divider_test2", "after")
-	MenuHelper:AddMenuItem(nodes.pause, "ingame_achievements", "menu_ingame_achievements", "", "divider_test2", "after")
+	MenuHelper:AddMenuItem(nodes.pause, "ingame_achievements", "menu_ingame_achievements", "", "divider", "after")
 	MenuHelper:AddMenuItem(nodes.lobby, "ingame_achievements", "menu_ingame_achievements", "", "divider_test2", "after")
 end)
