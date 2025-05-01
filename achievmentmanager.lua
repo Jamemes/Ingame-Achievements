@@ -5,6 +5,13 @@ local function award_achievement(id)
 		local icon = tweak_data.achievement.visual and tweak_data.achievement.visual[id] and tweak_data.achievement.visual[id].icon_id or "generic_achievement_icon"
 		
 		if HudChallengeNotification then
+			if icon and tweak_data.achievement.IngameAchievements_icons then
+				tweak_data.hud_icons.generic_achievement_icon = {
+					texture = tweak_data.achievement.IngameAchievements_icons[id][1],
+					texture_rect = tweak_data.achievement.IngameAchievements_icons[id][2]
+				}
+			end
+			
 			HudChallengeNotification.queue(head, text, icon)
 		end
 		

@@ -1,12 +1,6 @@
-tweak_data.hud_icons.generic_achievement_icon = {
-	texture = "guis/textures/pd2/skilltree/icons_atlas",
-	texture_rect = {
-		0,
-		64 * 8,
-		64,
-		64
-	}
-}
+if not tweak_data.achievement.visual then
+	dofile(ModPath .. "achievement_icons.lua")
+end
 
 tweak_data.persistent_stat_unlocks = {
 	gage_9_stats = {
