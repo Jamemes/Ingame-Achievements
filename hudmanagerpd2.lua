@@ -627,20 +627,22 @@ function HUDStatsScreen:init()
 
 
 
-	local achieves = {
-		"you_gotta_start_somewhere",
-		"charliesierra_7",
-		"armored_1",
-		"gage_1",
-        "berry_4",
-        -- "bigbank_8",
-		-- "bob_5",
-		-- "bob_6",
-		-- "dark_4",
-		-- "fort_2",
-		-- "gage2_8",
-		-- "gage4_2",
-	}
+	local achieves = IngameAchievements.awards.tracker or {}
+	-- "you_gotta_start_somewhere",
+	-- "charliesierra_7",
+	-- "armored_1",
+	-- "gage_1",
+	-- "armored_9",
+	
+	-- "berry_4",
+	-- "bigbank_8",
+	-- "bob_5",
+	-- "bob_6",
+	-- "dark_4",
+	-- "fort_2",
+	-- "gage2_8",
+	-- "gage4_2",
+
 	
 	local left_bg = left_panel:child("blur_bg")
 	local achievements_panel = left_panel:panel({

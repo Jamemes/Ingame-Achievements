@@ -31,16 +31,12 @@ local function make_fine_text(text)
 	text:set_position(math.round(text:x()), math.round(text:y()))
 end
 
-local function set_color(unlock, odd)
+local function set_color(unlock, odd, track)
 	local alpha = odd and 0.25 or 0.35
-	if unlock then
-		return tweak_data.screen_colors.button_stage_3:with_alpha(alpha)
+	if tostring(unlock) ~= "nil" then
+		return tostring(unlock) ~= "true" and tweak_data.screen_colors.button_stage_3:with_alpha(alpha) or Color("A70000"):with_alpha(alpha)
 	else
-		if unlock == false then
-			return Color("A70000"):with_alpha(alpha)
-		else
-			return Color.black:with_alpha(odd and 0.3 or 0.4)
-		end
+		return track and tweak_data.screen_colors.risk or Color.black:with_alpha(odd and 0.3 or 0.4)
 	end
 end
 	
@@ -60,19 +56,19 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 		blend_mode = unlocked and "sub" or "normal",
 		texture = icon_texture,
 		texture_rect = icon_texture_rect,
-		alpha = 0.75,
+		alpha = unlocked and 1 or 0.75,
 		layer = 5,
-		w = 50,
-		h = 50
+		w = panel:h() / 1.5,
+		h = panel:h() / 1.5
 	})
 	icon_bitmap:set_center_y(panel:h() / 2)
-	icon_bitmap:set_left(10)
+	icon_bitmap:set_left(15)
 	
 	local icon_bg = panel:panel({
 		name = "icon_bg",
 		visible = tostring(unlocked) == "true",
-		w = 55,
-		h = 55
+		w = panel:h() / 1.3,
+		h = panel:h() / 1.3
 	})
 	
 	icon_bg:rect({
@@ -94,21 +90,32 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 		color = unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.button_stage_3,
 		layer = 1
 	})
+	
 	make_fine_text(title)
-	title:set_left(icon_bitmap:right() + 10)
+	title:set_left(icon_bitmap:right() + 15)
 	title:set_center_y(icon_bitmap:center_y() - (tweak_data.menu.pd2_medium_font_size / 2))
+	local _, _, w, _ = title:text_rect()
+	while w > panel:w() / 1.8 do
+		title:set_font_size(title:font_size() * 0.99)
+		_, _, w, _ = title:text_rect()
+	end
+	make_fine_text(title)
 
 	local desc = panel:text({
 		name = "desc",
+		align = "left",
+		wrap = true,
+		wrap_mode = true,
 		text = managers.localization:text("achievement_".. item.name .."_desc"),
 		font = tweak_data.menu.pd2_medium_font,
 		font_size = tweak_data.menu.pd2_medium_font_size / 1.75,
 		color = unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(0.6),
 		layer = 1
 	})
-	make_fine_text(desc)
 	desc:set_left(title:left())
 	desc:set_top(title:bottom() + 5)
+	desc:set_h(tweak_data.menu.pd2_medium_font_size * 2)
+	desc:set_w(panel:w() / 1.8)
 	
 	local unlock_time = panel:text({
 		name = "unlock_time",
@@ -179,7 +186,8 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 	
 	panel:rect({
 		name = "background_color",
-		color = set_color(unlocked, item.index % 2 ~= 0)
+		layer = -5,
+		color = set_color(unlocked, item.index % 2 ~= 0, table.contains(IngameAchievements.awards.tracker or {}, item.name))
 	})
 end
 
@@ -189,11 +197,12 @@ function IngameAchievements:update_achievement_gui(panel, item, unlocked)
 	panel:child("title"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.button_stage_3)
 	panel:child("desc"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(0.6))
 	panel:child("unlock_time"):set_visible(unlocked)
-	panel:child("background_color"):set_color(set_color(unlocked, item.index % 2 ~= 0))
+	panel:child("background_color"):set_color(set_color(unlocked, item.index % 2 ~= 0), table.contains(IngameAchievements.awards.tracker or {}, item.name))
 	
 	if alive(panel:child("progress_bar")) then
 		panel:child("progress_bar"):set_visible(not unlocked)
 	end
+	log("click")
 end
 
 MenuHelper:AddComponent("view_achievements", AchievementsGui)
