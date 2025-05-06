@@ -627,7 +627,6 @@ function HUDStatsScreen:init()
 
 
 
-	local achieves = IngameAchievements.awards.tracker or {}
 	-- "you_gotta_start_somewhere",
 	-- "charliesierra_7",
 	-- "armored_1",
@@ -643,45 +642,6 @@ function HUDStatsScreen:init()
 	-- "gage2_8",
 	-- "gage4_2",
 
-	
-	local left_bg = left_panel:child("blur_bg")
-	local achievements_panel = left_panel:panel({
-		x = left_bg:x(),
-		y = left_bg:y(),
-		w = left_bg:w(),
-		h = left_bg:h(),
-		layer = 1,
-	})
-	
-	local achievements_panel_bottom = 0
-	for k, v in pairs(achieves) do
-		local item = {index = k, name = v}
-		
-		local achievement_panel = achievements_panel:panel({
-			y = 68 * (k - 1),
-			h = 68
-		})
-		IngameAchievements:create_achievement_gui(achievement_panel, item, IngameAchievements.awards[item.name])
-		achievements_panel:set_h(achievement_panel:bottom() < 700 and achievement_panel:bottom() or 700)
-	end
-
-	local blur_bg = achievements_panel:bitmap({
-		x = left_bg:x(),
-		y = left_bg:y(),
-		w = achievements_panel:w(),
-		h = achievements_panel:h(),
-		render_template = "VertexColorTexturedBlur3D",
-		texture = "guis/textures/test_blur_df",
-		layer = -1,
-		valign = "scale",
-	})
-	
-	if #achieves > 0 then
-		left_panel:child("objectives_title"):hide()
-		left_panel:child("objectives_panel"):hide()
-	end
-	
-	
 	-- local t_y = 0
 	-- self._scroll = ScrollItemList:new(left_panel, {
 		-- scrollbar_padding = 10,
@@ -739,8 +699,66 @@ function HUDStatsScreen:init()
 
 
 
+	self:create_tracker()
 
 
 
+end
 
+
+function HUDStatsScreen:loot_value_updated()
+	local right_panel = self._full_hud_panel:child("right_panel")
+	local left_panel = self._full_hud_panel:child("left_panel")
+	self:_update_stats_screen_loot(left_panel:child("loot_wrapper_panel"))
+	self:create_tracker()
+end
+
+function HUDStatsScreen:create_tracker()
+	
+	if alive(self._achievements_tracker) then
+		self._achievements_tracker:stop()
+		self._achievements_tracker:clear()
+	end
+	
+	local achieves = IngameAchievements.awards.tracker or {}
+	local left_panel = self._full_hud_panel:child("left_panel")
+	local left_bg = left_panel:child("blur_bg")
+	self._achievements_tracker = left_panel:panel({
+		x = left_bg:x(),
+		y = left_bg:y(),
+		w = left_bg:w(),
+		h = left_bg:h(),
+		layer = 1,
+	})
+	
+	local achievements_panel_bottom = 0
+	for k, v in pairs(achieves) do
+		local item = {index = k, name = v}
+		
+		local achievement_panel = self._achievements_tracker:panel({
+			y = 68 * (k - 1),
+			h = 68
+		})
+		IngameAchievements:create_achievement_gui(achievement_panel, item, IngameAchievements.awards[item.name])
+		self._achievements_tracker:set_h(achievement_panel:bottom() < 700 and achievement_panel:bottom() or 700)
+	end
+
+	local blur_bg = self._achievements_tracker:bitmap({
+		x = left_bg:x(),
+		y = left_bg:y(),
+		w = self._achievements_tracker:w(),
+		h = self._achievements_tracker:h(),
+		render_template = "VertexColorTexturedBlur3D",
+		texture = "guis/textures/test_blur_df",
+		layer = -1,
+		valign = "scale",
+	})
+	
+	if #achieves > 0 then
+		left_panel:child("objectives_title"):hide()
+		left_panel:child("objectives_panel"):hide()
+	else
+		left_panel:child("objectives_title"):show()
+		left_panel:child("objectives_panel"):show()
+	end
 end

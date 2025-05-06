@@ -12,24 +12,29 @@ if not ToggleInputPanel then
 	end
 end
 
+local function make_fine_text(text)
+	local x, y, w, h = text:text_rect()
+	text:set_size(w, h)
+	text:set_position(math.round(text:x()), math.round(text:y()))
+end
+
 AchievementItem = AchievementItem or class(ListItem)
+
 function AchievementItem:init(parent, item)
 	AchievementItem.super.init(self, parent, {
-		input = true,
-		h = 70,
-		w = parent:w()
+		w = parent:w(),
+		input = false,
+		h = 70
 	})
 
 	self._item = item
-	self._click = self:panel({name = item.name})
-	self._click:set_w(self:w())
+	self._content_panel = self._panel:panel({layer = 1})
+
 	self._select_panel = self._panel:panel({
-		layer = self:layer() - 1,
-		w = self:w(),
-		h = self:h()
+		layer = 1,
+		visible = false
 	})
 
-	self._select_panel:set_lefttop(self:lefttop())
 	BoxGuiObject:new(self._select_panel, {
 		sides = {
 			2,
@@ -38,76 +43,22 @@ function AchievementItem:init(parent, item)
 			2
 		}
 	})
+	
+	IngameAchievements:create_achievement_gui(self._content_panel, item, IngameAchievements.awards[item.name], table.contains(IngameAchievements.awards.tracker or {}, item.name))
+end
 
-	if item.index % 2 == 0 then
-		local grayed_panel = self._panel:panel({
-			layer = self:layer() - 2,
-			w = self:w(),
-			h = self:h()
-		})
-
-		grayed_panel:set_lefttop(self:lefttop())
-		grayed_panel:rect({
-			color = Color.black:with_alpha(0.4)
-		})
+function AchievementItem:mouse_moved(button, x, y)
+	if self:inside(x, y) then
+		return true, "link"
 	end
-
-	self:_selected_changed(false)
-	IngameAchievements:create_achievement_gui(self._panel, item, IngameAchievements.awards[item.name])
-end
-
-local function make_fine_text(text)
-	local x, y, w, h = text:text_rect()
-	text:set_size(w, h)
-	text:set_position(math.round(text:x()), math.round(text:y()))
-end
-
-local function persistent_stat(ach)
-	for key, value in pairs(tweak_data.persistent_stat_unlocks) do
-		if value[1].award == ach then
-			return key
-		end
-	end
-end
-
-function AchievementItem:_selected_changed(state)
-	self._select_panel:set_visible(state)
-end
-
-function AchievementItem:mouse_pressed(button, x, y)
-	if button == Idstring("0") and self._click:inside(x, y) then
-		-- local unlocked = IngameAchievements.awards[self._click:name()]
-		-- if tostring(unlocked) ~= "nil" then
-			-- IngameAchievements.awards[self._click:name()] = unlocked and true or false
-		-- else
-			-- local tracker = IngameAchievements.awards.tracker or {}
-			-- if not table.contains(tracker, self._click:name()) then
-				-- if not IngameAchievements.awards.tracker then
-					-- IngameAchievements.awards.tracker = {}
-				-- end
-				
-				-- table.insert(IngameAchievements.awards.tracker, self._click:name())
-			-- elseif table.contains(tracker, self._click:name()) then
-				-- table.delete(IngameAchievements.awards.tracker, self._click:name())
-				
-				-- if #IngameAchievements.awards.tracker == 0 then
-					-- IngameAchievements.awards.tracker = nil
-				-- end
-			-- end
-		-- end
-		
-		IngameAchievements:update_achievement_gui(self._panel, self._item, IngameAchievements.awards[self._click:name()])
-		IngameAchievements:Save()
-
-		return true
-	end
-	-- AchievementsGui.super.mouse_pressed(self, button, x, y)
 end
 
 AchievementsGui = AchievementsGui or class(ExtendedPanel)
 
 function AchievementsGui:init(ws, fullscreen_ws, node)
 	AchievementsGui.super.init(self, ws:panel())
+	
+	self:set_layer(tweak_data.gui.MENU_COMPONENT_LAYER)
 	
 	self._ws = ws
 	self._fullscreen_ws = fullscreen_ws
@@ -116,7 +67,6 @@ function AchievementsGui:init(ws, fullscreen_ws, node)
 	self._fullscreen_panel = self._fullscreen_ws:panel():panel({
 		name = "fullscreen"
 	})
-	self._panel:set_layer(200)
 	
 	if managers.menu:is_pc_controller() then
 		local back_text = self._panel:text({
@@ -198,6 +148,26 @@ function AchievementsGui:init(ws, fullscreen_ws, node)
 	self:_create_achievements_list()
 end
 
+function AchievementsGui:_update_achievements_track(ach_track)
+	local function count(v, total)
+		local i = 0
+
+		for k, item in pairs(v) do
+			if type(item) == "boolean" and table.contains(total, k) then
+				i = i + 1
+			end
+		end
+
+		return i
+	end
+
+	local num_ach_unlocked = count(IngameAchievements.awards, self._achievements)
+	local num_ach_total = table.size(self._achievements) or 0
+	local tracked_text = IngameAchievements.awards.tracker and string.format(", %s: %s", "Tracked", #IngameAchievements.awards.tracker) or ""
+	ach_track:set_text(managers.localization:text("menu_trophy_unlocked") .. string.format(": (%d / %d)", num_ach_unlocked, num_ach_total) .. tracked_text)
+	make_fine_text(ach_track)
+end
+
 function AchievementsGui:_create_achievements_list()
 	local title_text = self._main_panel:text({
 		layer = 1,
@@ -224,23 +194,7 @@ function AchievementsGui:_create_achievements_list()
 	})
 	make_fine_text(ach_track)
 	ach_track:set_top(title_text:bottom() + 5)
-
-	local function count(v, total)
-		local i = 0
-
-		for k, item in pairs(v) do
-			if type(item) == "boolean" and table.contains(total, k) then
-				i = i + 1
-			end
-		end
-
-		return i
-	end
-	
-	local num_ach_unlocked = count(IngameAchievements.awards, self._achievements)
-	local num_ach_total = table.size(self._achievements) or 0
-	ach_track:set_text(managers.localization:text("menu_trophy_unlocked") .. string.format(": (%d / %d)", num_ach_unlocked, num_ach_total))
-	make_fine_text(ach_track)
+	self:_update_achievements_track(ach_track)
 	
 	local t_y = title_text:bottom() + 30
 
@@ -316,7 +270,7 @@ local AchievementsGui_pointer = AchievementsGui.mouse_moved
 function AchievementsGui:mouse_moved(o, x, y)
 	local used, pointer = AchievementsGui_pointer(self, o, x, y)
 
-	if not used and self._searchbox then
+	if not used and self._scroll then
 		used, pointer = self._scroll:mouse_moved(o, x, y)
 	end
 	
@@ -352,27 +306,48 @@ function AchievementsGui:mouse_pressed(button, x, y)
 		return
 	end
 	
-	if self._scroll and self._scroll:mouse_pressed(button, x, y) then
-		return
+	if self._scroll:mouse_pressed(button, x, y) then
+		return true
+	end
+	
+	if button == Idstring("0") then
+		if self._panel:child("back_button"):inside(x, y) then
+			managers.menu:back()
+
+			return
+		end
+
+		if self._scroll:inside(x, y) then
+			for index, item in ipairs(self._scroll:items()) do
+				if item:inside(x, y) then
+					local name = item._item.name
+					if not IngameAchievements:tracked(name) then
+						IngameAchievements.awards.tracker = IngameAchievements.awards.tracker or {}
+						table.insert(IngameAchievements.awards.tracker, name)
+					elseif IngameAchievements:tracked(name) then
+						table.delete(IngameAchievements.awards.tracker, name)
+						if #IngameAchievements.awards.tracker == 0 then
+							IngameAchievements.awards.tracker = nil
+						end
+					end
+				
+					IngameAchievements:update_achievement_gui(item._content_panel, item._item, IngameAchievements.awards[name], IngameAchievements:tracked(name))
+					IngameAchievements:Save()
+					
+					if managers.hud then
+						managers.hud:loot_value_updated()
+					end
+					
+					self:_update_achievements_track(self._main_panel:child("ach_track"))
+					
+					return
+				end
+			end
+		end
 	end
 	
 	return AchievementsGui.super.mouse_pressed(self, button, x, y)
 end
--- Hooks:PreHook(AchievementsGui, "mouse_pressed", "IngameAchievements.mouse_pressed", function(self, button, x, y)
-	-- if self._searchbox and self._searchbox:mouse_pressed(button, x, y) then
-		-- return
-	-- end
-	-- PrintTable(self._scroll:all_items())
-	-- if self._scroll:mouse_pressed(button, x, y) then
-		-- return
-	-- end
-	
-	-- if self._panel:child("back_button"):inside(x, y) and button == Idstring("0") then
-		-- managers.menu:back()
-
-		-- return
-	-- end
--- end)
 
 function AchievementsGui:update(...)
 end

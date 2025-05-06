@@ -1,5 +1,5 @@
 local function award_achievement(id)
-	if not IngameAchievements.awards[id] then
+	if not IngameAchievements.awards[id] or IngameAchievements:tracked(id) then
 		local head = managers.localization:to_upper_text("hud_achieved_popup")
 		local text = managers.localization:to_upper_text("achievement_" .. id) .. "\n" .. managers.localization:text("achievement_".. id .. "_desc")
 		local icon = tweak_data.achievement.visual and tweak_data.achievement.visual[id] and tweak_data.achievement.visual[id].icon_id or "generic_achievement_icon"
@@ -15,10 +15,21 @@ local function award_achievement(id)
 			HudChallengeNotification.queue(head, text, icon)
 		end
 		
+		if IngameAchievements:tracked(id) then
+			table.delete(IngameAchievements.awards.tracker, id)
+			if #IngameAchievements.awards.tracker == 0 then
+				IngameAchievements.awards.tracker = nil
+			end
+		end
+
 		IngameAchievements.awards.time = IngameAchievements.awards.time or {}
 		IngameAchievements.awards.time[id] = os.date("%d %b %Y %H:%M")
 		IngameAchievements.awards[id] = true
 		IngameAchievements:Save()
+
+		if managers.hud then
+			managers.hud:loot_value_updated()
+		end
 	end
 end
 

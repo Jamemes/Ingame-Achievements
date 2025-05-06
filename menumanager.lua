@@ -25,22 +25,31 @@ end
 
 Load()
 
+function IngameAchievements:tracked(name)
+	return table.contains(IngameAchievements.awards.tracker or {}, name)
+end
+
 local function make_fine_text(text)
 	local x, y, w, h = text:text_rect()
 	text:set_size(w, h)
 	text:set_position(math.round(text:x()), math.round(text:y()))
 end
 
-local function set_color(unlock, odd, track)
+local function set_color(status, odd, track)
 	local alpha = odd and 0.25 or 0.35
-	if tostring(unlock) ~= "nil" then
-		return tostring(unlock) ~= "true" and tweak_data.screen_colors.button_stage_3:with_alpha(alpha) or Color("A70000"):with_alpha(alpha)
-	else
-		return track and tweak_data.screen_colors.risk or Color.black:with_alpha(odd and 0.3 or 0.4)
-	end
+	local unlocked = {
+		["nil"] = Color.black:with_alpha(odd and 0.3 or 0.4),
+		["boolean"] = tweak_data.screen_colors.button_stage_3:with_alpha(alpha),
+	}
+
+	return track and Color("C864C8"):with_alpha(odd and 0.3 or 0.4) or unlocked[status]
 end
 	
-function IngameAchievements:create_achievement_gui(panel, item, unlocked)
+function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
+	panel:stop()
+	panel:clear()
+
+	local unlocked = type(status) == "boolean" and not tracked
 	local icon_texture, icon_texture_rect = nil, nil
 	local visuals_icon = tweak_data.achievement.visual and tweak_data.achievement.visual[item.name] and tweak_data.achievement.visual[item.name].icon_id
 	if visuals_icon then
@@ -50,25 +59,12 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 			icon_texture, icon_texture_rect = tweak_data.achievement.IngameAchievements_icons[item.name][1], tweak_data.achievement.IngameAchievements_icons[item.name][2]
 		end
 	end
-	
-	local icon_bitmap = panel:bitmap({
-		name = "icon_bitmap",
-		blend_mode = unlocked and "sub" or "normal",
-		texture = icon_texture,
-		texture_rect = icon_texture_rect,
-		alpha = unlocked and 1 or 0.75,
-		layer = 5,
-		w = panel:h() / 1.5,
-		h = panel:h() / 1.5
-	})
-	icon_bitmap:set_center_y(panel:h() / 2)
-	icon_bitmap:set_left(15)
-	
+
 	local icon_bg = panel:panel({
 		name = "icon_bg",
-		visible = tostring(unlocked) == "true",
-		w = panel:h() / 1.3,
-		h = panel:h() / 1.3
+		visible = unlocked,
+		w = panel:h() / 1.4,
+		h = panel:h() / 1.4
 	})
 	
 	icon_bg:rect({
@@ -76,19 +72,28 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 		name = "bg",
 		halign = "grow",
 		valign = "grow",
-		layer = -1,
+		layer = -2,
 		color = Color.white
 	})
-	
-	icon_bg:set_center(icon_bitmap:center_x(), icon_bitmap:center_y())
+	icon_bg:set_center_y(panel:h() / 2)
+	icon_bg:set_left(12)
+
+	local icon_bitmap = panel:bitmap({
+		name = "icon_bitmap",
+		blend_mode = unlocked and "sub" or "normal",
+		texture = icon_texture,
+		texture_rect = icon_texture_rect,
+		w = panel:h() / 1.5,
+		h = panel:h() / 1.5
+	})
+	icon_bitmap:set_center(icon_bg:center_x(), icon_bg:center_y())
 
 	local title = panel:text({
 		name = "title",
 		text = managers.localization:text("achievement_".. item.name),
 		font = tweak_data.menu.pd2_large_font,
 		font_size = tweak_data.menu.pd2_medium_font_size,
-		color = unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.button_stage_3,
-		layer = 1
+		color = unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.button_stage_3
 	})
 	
 	make_fine_text(title)
@@ -109,8 +114,7 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 		text = managers.localization:text("achievement_".. item.name .."_desc"),
 		font = tweak_data.menu.pd2_medium_font,
 		font_size = tweak_data.menu.pd2_medium_font_size / 1.75,
-		color = unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(0.6),
-		layer = 1
+		color = unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(tracked and 1 or 0.6)
 	})
 	desc:set_left(title:left())
 	desc:set_top(title:bottom() + 5)
@@ -123,7 +127,7 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 		font = tweak_data.menu.pd2_medium_font,
 		font_size = tweak_data.menu.pd2_medium_font_size,
 		color = title_color,
-		visible = tostring(unlocked) == "true",
+		visible = unlocked,
 	})
 	make_fine_text(unlock_time)
 	unlock_time:set_center_y(panel:h() / 2)
@@ -151,8 +155,7 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 		progress_bar:rect({
 			color = Color.black,
 			blend_mode = "normal",
-			alpha = 0.3,
-			layer = 1
+			alpha = 0.3
 		})
 
 		BoxGuiObject:new(progress_bar, {sides = {2, 2, 2, 2}})
@@ -161,8 +164,7 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 			h = progress_bar:h() - padding,
 			color = tweak_data.screen_colors.button_stage_3,
 			alpha = 1,
-			blend_mode = "add",
-			layer = 1
+			blend_mode = "add"
 		})
 		progress_line:set_center_y(progress_bar:h() / 2)
 		
@@ -176,9 +178,9 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 			font = tweak_data.menu.pd2_small_font,
 			font_size = tweak_data.menu.pd2_small_font_size,
 			text = "(" .. current_stat .. "/" .. max_stat .. ")",
-			color = Color.white:with_alpha(0.6),
-			layer = 3
+			color = Color.white:with_alpha(0.6)
 		})
+
 		make_fine_text(progress)
 		progress:set_center_x(progress_bar:w() / 2)
 		progress:set_center_y(progress_bar:h() / 2)
@@ -186,23 +188,23 @@ function IngameAchievements:create_achievement_gui(panel, item, unlocked)
 	
 	panel:rect({
 		name = "background_color",
-		layer = -5,
-		color = set_color(unlocked, item.index % 2 ~= 0, table.contains(IngameAchievements.awards.tracker or {}, item.name))
+		layer = -3,
+		color = set_color(type(status), item.index % 2 ~= 0, tracked)
 	})
 end
 
-function IngameAchievements:update_achievement_gui(panel, item, unlocked)
+function IngameAchievements:update_achievement_gui(panel, item, status, tracked)
+	local unlocked = type(status) == "boolean" and not tracked
+	panel:child("background_color"):set_color(set_color(type(status), item.index % 2 ~= 0, tracked))
 	panel:child("icon_bitmap"):set_blend_mode(unlocked and "sub" or "normal")
 	panel:child("icon_bg"):set_visible(unlocked)
 	panel:child("title"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.button_stage_3)
-	panel:child("desc"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(0.6))
+	panel:child("desc"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(tracked and 1 or 0.6))
 	panel:child("unlock_time"):set_visible(unlocked)
-	panel:child("background_color"):set_color(set_color(unlocked, item.index % 2 ~= 0), table.contains(IngameAchievements.awards.tracker or {}, item.name))
 	
 	if alive(panel:child("progress_bar")) then
 		panel:child("progress_bar"):set_visible(not unlocked)
 	end
-	log("click")
 end
 
 MenuHelper:AddComponent("view_achievements", AchievementsGui)
