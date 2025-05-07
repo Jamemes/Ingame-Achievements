@@ -3,6 +3,21 @@ if not tweak_data.achievement.visual then
 end
 
 tweak_data.persistent_stat_unlocks = {
+	first_blood = {
+		{
+			award = "gage2_5",
+			killed_by_weapon = 220,
+			category = "lmg"
+		}
+	},
+	shotgun_101 = {
+		{
+			award = "gage4_5",
+			kills = 50,
+			hit_accuracy = true,
+			used_weapons = {"shotgun"},
+		}
+	},
 	gage_9_stats = {
 		{
 			award = "gage_9",

@@ -49,6 +49,14 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	panel:stop()
 	panel:clear()
 
+	local function persistent_stat(ach)
+		for key, value in pairs(tweak_data.persistent_stat_unlocks) do
+			if value[1].award == ach then
+				return key
+			end
+		end
+	end
+
 	local unlocked = type(status) == "boolean" and not tracked
 	local icon_texture, icon_texture_rect = nil, nil
 	local visuals_icon = tweak_data.achievement.visual and tweak_data.achievement.visual[item.name] and tweak_data.achievement.visual[item.name].icon_id
@@ -88,6 +96,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	})
 	icon_bitmap:set_center(icon_bg:center_x(), icon_bg:center_y())
 
+	local width_max = persistent_stat(item.name) and 1.8 or 1.35
 	local title = panel:text({
 		name = "title",
 		text = managers.localization:text("achievement_".. item.name),
@@ -97,14 +106,14 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	})
 	
 	make_fine_text(title)
-	title:set_left(icon_bitmap:right() + 15)
-	title:set_center_y(icon_bitmap:center_y() - (tweak_data.menu.pd2_medium_font_size / 2))
 	local _, _, w, _ = title:text_rect()
-	while w > panel:w() / 1.8 do
+	while w > panel:w() / width_max do
 		title:set_font_size(title:font_size() * 0.99)
 		_, _, w, _ = title:text_rect()
 	end
 	make_fine_text(title)
+	title:set_left(icon_bitmap:right() + 15)
+	title:set_center_y(icon_bitmap:center_y() - (tweak_data.menu.pd2_medium_font_size / 2))
 
 	local desc = panel:text({
 		name = "desc",
@@ -119,7 +128,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	desc:set_left(title:left())
 	desc:set_top(title:bottom() + 5)
 	desc:set_h(tweak_data.menu.pd2_medium_font_size * 2)
-	desc:set_w(panel:w() / 1.8)
+	desc:set_w(panel:w() / width_max)
 	
 	local unlock_time = panel:text({
 		name = "unlock_time",
@@ -133,20 +142,47 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	unlock_time:set_center_y(panel:h() / 2)
 	unlock_time:set_right(panel:w() - 20)
 
-	local function persistent_stat(ach)
-		for key, value in pairs(tweak_data.persistent_stat_unlocks) do
-			if value[1].award == ach then
-				return key
+	if persistent_stat(item.name) then
+		local function session_killed_by_weapon_category(category)
+			for weapon_id, data in pairs(managers.statistics._global.session.killed_by_weapon) do
+				if tweak_data.weapon[weapon_id].category == category then
+					return data.count
+				end
 			end
 		end
-	end
+	
+		local stat_data = tweak_data.persistent_stat_unlocks[persistent_stat(item.name)][1]
+		local session_total_killed = managers.statistics._global.session.killed.total.count - managers.statistics._global.session.killed.civilian.count - managers.statistics._global.session.killed.civilian_female.count or 0
+		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(item.name)] or stat_data.kills and session_total_killed or stat_data.killed_by_weapon and session_killed_by_weapon_category(stat_data.category) or 0
+		local max_stat = stat_data.killed_by_weapon or stat_data.kills or stat_data.at or 100
+		
+		local achievement_failed = nil
+		if stat_data.used_weapons then
+			for _, weapon_id in ipairs(managers.statistics:session_used_weapons()) do
+				if not tweak_data.weapon[weapon_id] or not table.contains(stat_data.used_weapons, tweak_data.weapon[weapon_id].category) then
+					achievement_failed = true
+				end
+			end
+		end
+			
+		local hit_accuracy = stat_data.hit_accuracy and ", " .. managers.statistics:session_hit_accuracy() .. "%" or ""
+		local kill_stats = "(" .. current_stat .. "/" .. max_stat .. ")"
+		local progress_text = kill_stats .. hit_accuracy
+		local progress_line_color = tweak_data.screen_colors.button_stage_3
+		
+		if achievement_failed then
+			progress_line_color = tweak_data.screen_colors.important_2
+			progress_text = "Failed!"
+			current_stat = 1
+			max_stat = 1
+		end
 
-	if persistent_stat(item.name) then
 		local padding = 10
 		local progress_bar = panel:panel({
 			name = "progress_bar",
 			h = 25,
 			visible = not unlocked,
+			layer = 1
 		})
 		progress_bar:set_width(panel:w() / 5)
 		progress_bar:set_right(panel:w() - 20)
@@ -155,33 +191,38 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		progress_bar:rect({
 			color = Color.black,
 			blend_mode = "normal",
-			alpha = 0.3
+			alpha = 0.3,
+			layer = -1
 		})
 
 		BoxGuiObject:new(progress_bar, {sides = {2, 2, 2, 2}})
 	
 		local progress_line = progress_bar:rect({
 			h = progress_bar:h() - padding,
-			color = tweak_data.screen_colors.button_stage_3,
+			color = progress_line_color,
 			alpha = 1,
 			blend_mode = "add"
 		})
 		progress_line:set_center_y(progress_bar:h() / 2)
-		
 		local full = progress_bar:w() - padding
-		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(item.name)] or 0
-		local max_stat = tweak_data.persistent_stat_unlocks[persistent_stat(item.name)][1].at or 100
 		progress_line:set_w(full * (current_stat / max_stat))
 		progress_line:set_left(5)
-		
 		local progress = progress_bar:text({
 			font = tweak_data.menu.pd2_small_font,
-			font_size = tweak_data.menu.pd2_small_font_size,
-			text = "(" .. current_stat .. "/" .. max_stat .. ")",
-			color = Color.white:with_alpha(0.6)
+			font_size = tweak_data.menu.pd2_small_font_size * 0.9,
+			text = progress_text,
+			color = Color.white:with_alpha(0.6),
+			layer = 1
 		})
 
 		make_fine_text(progress)
+		local _, _, w, _ = progress:text_rect()
+		while w > full do
+			progress:set_font_size(progress:font_size() * 0.99)
+			_, _, w, _ = progress:text_rect()
+		end
+		make_fine_text(progress)
+		
 		progress:set_center_x(progress_bar:w() / 2)
 		progress:set_center_y(progress_bar:h() / 2)
 	end

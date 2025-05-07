@@ -33,7 +33,7 @@ local function award_achievement(id)
 	end
 end
 
-Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.award_progress", function(self, stat, value)
+Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.AchievmentManager.award_progress", function(self, stat, value)
 	if not IngameAchievements.awards[stat:gsub("_stats", ""):gsub("_stat", "")] then
 		IngameAchievements.awards.stats = IngameAchievements.awards.stats or {}
 		IngameAchievements.awards.stats[stat] = (IngameAchievements.awards.stats[stat] or 0) + (value or 1)
@@ -48,8 +48,13 @@ Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.award_prog
 		end
 		award_achievement(tweak_data.persistent_stat_unlocks[stat][1].award)
 	end
+	
+
+	if managers.hud then
+		managers.hud:loot_value_updated()
+	end
 end)
 
-Hooks:PreHook(AchievmentManager, "award", "IngameAchievments.award", function(self, id)
+Hooks:PreHook(AchievmentManager, "award", "IngameAchievments.AchievmentManager.award", function(self, id)
 	award_achievement(id)
 end)

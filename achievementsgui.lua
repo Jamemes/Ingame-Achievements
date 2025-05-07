@@ -24,7 +24,7 @@ function AchievementItem:init(parent, item)
 	AchievementItem.super.init(self, parent, {
 		w = parent:w(),
 		input = false,
-		h = 70
+		h = 80
 	})
 
 	self._item = item
