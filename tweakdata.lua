@@ -1,14 +1,40 @@
-tweak_data.hud_icons.generic_achievement_icon = {
-	texture = "guis/textures/pd2/skilltree/icons_atlas",
-	texture_rect = {
-		0,
-		64 * 8,
-		64,
-		64
-	}
-}
+if not tweak_data.achievement.visual then
+	dofile(ModPath .. "achievement_icons.lua")
+end
 
 tweak_data.persistent_stat_unlocks = {
+	full_two_twenty = {
+		{
+			award = "ovk_7",
+			killed_shots = true,
+			hit_accuracy = true,
+			at = 120
+		}
+	},
+	close_and_personal = {
+		{
+			award = "gage4_3",
+			killed_melee = true,
+			fail = "shots",
+			at = 50
+		}
+	},
+	first_blood = {
+		{
+			award = "gage2_5",
+			killed_category = "lmg",
+			at = 220
+		}
+	},
+	shotgun_101 = {
+		{
+			award = "gage4_5",
+			killed_shots = true,
+			hit_accuracy = true,
+			used_weapons = {"shotgun"},
+			at = 50
+		}
+	},
 	gage_9_stats = {
 		{
 			award = "gage_9",
