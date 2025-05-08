@@ -74,7 +74,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		color = set_color(type(status), item.index % 2 ~= 0, tracked),
 		w = panel:w(),
 		h = panel:h(),
-		layer = -2
+		layer = -1
 	})
 
 	panel:bitmap({
@@ -82,7 +82,6 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		render_template = "VertexColorTexturedBlur3D",
 		w = panel:w(),
 		h = panel:h(),
-		layer = -1
 	})
 
 	local icon_bg = panel:panel({
@@ -90,7 +89,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		visible = unlocked,
 		w = panel:h() / 1.4,
 		h = panel:h() / 1.4,
-		layer = -2
+		layer = -1
 	})
 	
 	icon_bg:bitmap({
@@ -104,18 +103,25 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	icon_bg:set_center_y(panel:h() / 2)
 	icon_bg:set_left(12)
 
-	local icon_bitmap = panel:bitmap({
+	
+	self._info_panel = panel:panel({
+		w = panel:w(),
+		h = panel:h(),
+		layer = 1
+	})
+
+	local icon_bitmap = self._info_panel:bitmap({
 		name = "icon_bitmap",
 		blend_mode = unlocked and "sub" or "normal",
 		texture = icon_texture,
 		texture_rect = icon_texture_rect,
-		w = panel:h() / 1.5,
-		h = panel:h() / 1.5
+		w = self._info_panel:h() / 1.5,
+		h = self._info_panel:h() / 1.5
 	})
 	icon_bitmap:set_center(icon_bg:center_x(), icon_bg:center_y())
 
 	local width_max = persistent_stat(item.name) and 1.8 or 1.35
-	local title = panel:text({
+	local title = self._info_panel:text({
 		name = "title",
 		text = managers.localization:text("achievement_".. item.name),
 		font = tweak_data.menu.pd2_large_font,
@@ -125,7 +131,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	
 	make_fine_text(title)
 	local _, _, w, _ = title:text_rect()
-	while w > panel:w() / width_max do
+	while w > self._info_panel:w() / width_max do
 		title:set_font_size(title:font_size() * 0.99)
 		_, _, w, _ = title:text_rect()
 	end
@@ -133,7 +139,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	title:set_left(icon_bitmap:right() + 15)
 	title:set_center_y(icon_bitmap:center_y() - (tweak_data.menu.pd2_medium_font_size / 2))
 
-	local desc = panel:text({
+	local desc = self._info_panel:text({
 		name = "desc",
 		align = "left",
 		wrap = true,
@@ -146,9 +152,9 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 	desc:set_left(title:left())
 	desc:set_top(title:bottom() + 5)
 	desc:set_h(tweak_data.menu.pd2_medium_font_size * 2)
-	desc:set_w(panel:w() / width_max)
+	desc:set_w(self._info_panel:w() / width_max)
 	
-	local unlock_time = panel:text({
+	local unlock_time = self._info_panel:text({
 		name = "unlock_time",
 		text = IngameAchievements.awards.time and IngameAchievements.awards.time[item.name] or "--/--/--",
 		font = tweak_data.menu.pd2_medium_font,
@@ -157,8 +163,8 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		visible = unlocked,
 	})
 	make_fine_text(unlock_time)
-	unlock_time:set_center_y(panel:h() / 2)
-	unlock_time:set_right(panel:w() - 20)
+	unlock_time:set_center_y(self._info_panel:h() / 2)
+	unlock_time:set_right(self._info_panel:w() - 20)
 
 	if persistent_stat(item.name) then
 		local function session_killed_by_weapon_category(category)
@@ -203,14 +209,14 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		end
 
 		local padding = 10
-		local progress_bar = panel:panel({
+		local progress_bar = self._info_panel:panel({
 			name = "progress_bar",
 			h = 25,
 			visible = not unlocked
 		})
-		progress_bar:set_width(panel:w() / 5)
-		progress_bar:set_right(panel:w() - 20)
-		progress_bar:set_center_y(panel:h() / 2)
+		progress_bar:set_width(self._info_panel:w() / 5)
+		progress_bar:set_right(self._info_panel:w() - 20)
+		progress_bar:set_center_y(self._info_panel:h() / 2)
 		
 		progress_bar:rect({
 			color = Color.black,
@@ -253,14 +259,14 @@ end
 function IngameAchievements:update_achievement_gui(panel, item, status, tracked)
 	local unlocked = type(status) == "boolean" and not tracked
 	panel:child("background_color"):set_color(set_color(type(status), item.index % 2 ~= 0, tracked))
-	panel:child("icon_bitmap"):set_blend_mode(unlocked and "sub" or "normal")
 	panel:child("icon_bg"):set_visible(unlocked)
-	panel:child("title"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.button_stage_3)
-	panel:child("desc"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(tracked and 1 or 0.6))
-	panel:child("unlock_time"):set_visible(unlocked)
+	self._info_panel:child("icon_bitmap"):set_blend_mode(unlocked and "sub" or "normal")
+	self._info_panel:child("title"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.button_stage_3)
+	self._info_panel:child("desc"):set_color(unlocked and tweak_data.screen_colors.text or tweak_data.screen_colors.text:with_alpha(tracked and 1 or 0.6))
+	self._info_panel:child("unlock_time"):set_visible(unlocked)
 	
-	if alive(panel:child("progress_bar")) then
-		panel:child("progress_bar"):set_visible(not unlocked)
+	if alive(self._info_panel:child("progress_bar")) then
+		self._info_panel:child("progress_bar"):set_visible(not unlocked)
 	end
 end
 

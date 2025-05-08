@@ -172,7 +172,7 @@ function AchievementsGui:_update_achievements_track(ach_track)
 end
 
 function AchievementsGui:_create_achievements_list()
-	managers.menu:set_and_send_sync_state("payday")
+	managers.menu:set_and_send_sync_state("blackmarket")
 	
 	local ach_track = self._main_panel:text({
 		name = "ach_track",

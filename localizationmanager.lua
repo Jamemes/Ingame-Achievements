@@ -16,14 +16,22 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 		end
 	end
 	
+	LocalizationManager:add_localized_strings({
+		menu_ingame_achievements = cus .. ach,
+		ingame_achievements_tracked = "Tracked",
+		ingame_achievements_failed = "Failed!",
+	})
+
 	if Idstring("russian"):key() == SystemInfo:language():key() then
 		ach = "Достижения"
 		if cus ~= "" then
 			cus = "Игровые "
 		end
+		
+		LocalizationManager:add_localized_strings({
+			menu_ingame_achievements = cus .. ach,
+			ingame_achievements_tracked = "Отслеживается",
+			ingame_achievements_failed = "Провалено!",
+		})
 	end
-	
-	LocalizationManager:add_localized_strings({
-		menu_ingame_achievements = cus .. ach,
-	})
 end)
