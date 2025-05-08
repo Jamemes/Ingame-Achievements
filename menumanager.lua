@@ -178,7 +178,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		local stat_data = tweak_data.persistent_stat_unlocks[persistent_stat(item.name)][1]
 		local killed = managers.statistics._global.session.killed.total.count - managers.statistics._global.session.killed.civilian.count - managers.statistics._global.session.killed.civilian_female.count or 0
 		local killed_melee = managers.statistics._global.session.killed.total.melee - managers.statistics._global.session.killed.civilian.melee - managers.statistics._global.session.killed.civilian_female.melee or 0
-		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(item.name)] or stat_data.killed == "shots" and killed or stat_data.killed == "melee" and killed_melee or stat_data.killed == "category" and session_killed_by_weapon_category(stat_data.category) or 0
+		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(item.name)] or stat_data.killed_shots and killed or stat_data.killed_melee and killed_melee or stat_data.killed_category and session_killed_by_weapon_category(stat_data.killed_category) or 0
 		local max_stat = stat_data.at or 100
 		
 		current_stat = current_stat > max_stat and max_stat or current_stat
