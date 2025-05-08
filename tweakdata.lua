@@ -3,19 +3,37 @@ if not tweak_data.achievement.visual then
 end
 
 tweak_data.persistent_stat_unlocks = {
+	full_two_twenty = {
+		{
+			award = "ovk_7",
+			killed = "enemies",
+			hit_accuracy = true,
+			at = 120
+		}
+	},
+	close_and_personal = {
+		{
+			award = "gage4_3",
+			killed = "melee",
+			fail = "shots",
+			at = 50
+		}
+	},
 	first_blood = {
 		{
 			award = "gage2_5",
-			killed_by_weapon = 220,
-			category = "lmg"
+			killed = "category",
+			category = "lmg",
+			at = 220
 		}
 	},
 	shotgun_101 = {
 		{
 			award = "gage4_5",
-			kills = 50,
+			killed = "enemies",
 			hit_accuracy = true,
 			used_weapons = {"shotgun"},
+			at = 50
 		}
 	},
 	gage_9_stats = {

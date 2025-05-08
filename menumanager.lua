@@ -68,21 +68,39 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		end
 	end
 
+	panel:bitmap({
+		name = "background_color",
+		texture = "guis/textures/test_blur_df",
+		color = set_color(type(status), item.index % 2 ~= 0, tracked),
+		w = panel:w(),
+		h = panel:h(),
+		layer = -2
+	})
+
+	panel:bitmap({
+		texture = "guis/textures/test_blur_df",
+		render_template = "VertexColorTexturedBlur3D",
+		w = panel:w(),
+		h = panel:h(),
+		layer = -1
+	})
+
 	local icon_bg = panel:panel({
 		name = "icon_bg",
 		visible = unlocked,
 		w = panel:h() / 1.4,
-		h = panel:h() / 1.4
+		h = panel:h() / 1.4,
+		layer = -2
 	})
 	
-	icon_bg:rect({
-		blend_mode = "normal",
+	icon_bg:bitmap({
+		texture = "guis/textures/test_blur_df",
 		name = "bg",
-		halign = "grow",
-		valign = "grow",
-		layer = -2,
-		color = Color.white
+		color = Color.white,
+		w = icon_bg:w(),
+		h = icon_bg:h()
 	})
+	
 	icon_bg:set_center_y(panel:h() / 2)
 	icon_bg:set_left(12)
 
@@ -152,9 +170,12 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		end
 	
 		local stat_data = tweak_data.persistent_stat_unlocks[persistent_stat(item.name)][1]
-		local session_total_killed = managers.statistics._global.session.killed.total.count - managers.statistics._global.session.killed.civilian.count - managers.statistics._global.session.killed.civilian_female.count or 0
-		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(item.name)] or stat_data.kills and session_total_killed or stat_data.killed_by_weapon and session_killed_by_weapon_category(stat_data.category) or 0
-		local max_stat = stat_data.killed_by_weapon or stat_data.kills or stat_data.at or 100
+		local killed = managers.statistics._global.session.killed.total.count - managers.statistics._global.session.killed.civilian.count - managers.statistics._global.session.killed.civilian_female.count or 0
+		local killed_melee = managers.statistics._global.session.killed.total.melee - managers.statistics._global.session.killed.civilian.melee - managers.statistics._global.session.killed.civilian_female.melee or 0
+		local current_stat = IngameAchievements.awards.stats and IngameAchievements.awards.stats[persistent_stat(item.name)] or stat_data.killed == "shots" and killed or stat_data.killed == "melee" and killed_melee or stat_data.killed == "category" and session_killed_by_weapon_category(stat_data.category) or 0
+		local max_stat = stat_data.at or 100
+		
+		current_stat = current_stat > max_stat and max_stat or current_stat
 		
 		local achievement_failed = nil
 		if stat_data.used_weapons then
@@ -164,15 +185,19 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 				end
 			end
 		end
-			
+		
+		if stat_data.fail == "shots" and managers.statistics._global.session.killed.total.count > 0 and managers.statistics._global.session.killed.total.count ~= managers.statistics._global.session.killed.total.melee then
+			achievement_failed = true
+		end
+
 		local hit_accuracy = stat_data.hit_accuracy and ", " .. managers.statistics:session_hit_accuracy() .. "%" or ""
 		local kill_stats = "(" .. current_stat .. "/" .. max_stat .. ")"
 		local progress_text = kill_stats .. hit_accuracy
-		local progress_line_color = tweak_data.screen_colors.button_stage_3
+		local progress_line_color = current_stat >= max_stat and tweak_data.screen_colors.friend_color:with_alpha(0.5) or tweak_data.screen_colors.button_stage_3
 		
 		if achievement_failed then
 			progress_line_color = tweak_data.screen_colors.important_2
-			progress_text = "Failed!"
+			progress_text = managers.localization:text("ingame_achievements_failed")
 			current_stat = 1
 			max_stat = 1
 		end
@@ -181,8 +206,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		local progress_bar = panel:panel({
 			name = "progress_bar",
 			h = 25,
-			visible = not unlocked,
-			layer = 1
+			visible = not unlocked
 		})
 		progress_bar:set_width(panel:w() / 5)
 		progress_bar:set_right(panel:w() - 20)
@@ -191,8 +215,7 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		progress_bar:rect({
 			color = Color.black,
 			blend_mode = "normal",
-			alpha = 0.3,
-			layer = -1
+			alpha = 0.3
 		})
 
 		BoxGuiObject:new(progress_bar, {sides = {2, 2, 2, 2}})
@@ -200,7 +223,6 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		local progress_line = progress_bar:rect({
 			h = progress_bar:h() - padding,
 			color = progress_line_color,
-			alpha = 1,
 			blend_mode = "add"
 		})
 		progress_line:set_center_y(progress_bar:h() / 2)
@@ -226,12 +248,6 @@ function IngameAchievements:create_achievement_gui(panel, item, status, tracked)
 		progress:set_center_x(progress_bar:w() / 2)
 		progress:set_center_y(progress_bar:h() / 2)
 	end
-	
-	panel:rect({
-		name = "background_color",
-		layer = -3,
-		color = set_color(type(status), item.index % 2 ~= 0, tracked)
-	})
 end
 
 function IngameAchievements:update_achievement_gui(panel, item, status, tracked)

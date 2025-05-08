@@ -1,6 +1,8 @@
 Global.achievements_loc = {
 	menu_trophy_unlocked = "Получено",
 	hud_achieved_popup = "ДОСТИЖЕНИЕ ОТКРЫТО!",
+	ingame_achievements_tracked = "Отслеживается",
+	ingame_achievements_failed = "Провалено!",
 
 	achievement_born_1 = [[Ты заслужил нашивку!]],
 	achievement_axe_9 = [[Лишние деньги]],

@@ -1,7 +1,9 @@
 Global.achievements_loc = {
 	menu_trophy_unlocked = "Unlocked",
 	hud_achieved_popup = "ACHIEVEMENT UNLOCKED!",
-		
+	ingame_achievements_tracked = "Tracked",
+	ingame_achievements_failed = "Failed!",
+
 	achievement_ameno_2 = [[Hey Mr. DJ]],
 	achievement_ameno_7 = [[Private Party]],
 	achievement_armed_and_dangerous = [[Armed and Dangerous]],

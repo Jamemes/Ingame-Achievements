@@ -57,13 +57,26 @@ AchievementsGui = AchievementsGui or class(ExtendedPanel)
 
 function AchievementsGui:init(ws, fullscreen_ws, node)
 	AchievementsGui.super.init(self, ws:panel())
-	
+
 	self:set_layer(tweak_data.gui.MENU_COMPONENT_LAYER)
 	
 	self._ws = ws
 	self._fullscreen_ws = fullscreen_ws
 	self._node = node
 	
+	local title_text = self._panel:text({
+		vertical = "top",
+		name = "title_text",
+		align = "left",
+		text = managers.network:session() and managers.network:session():_local_peer_in_lobby() and " " or managers.localization:text("menu_ingame_achievements"),
+		font_size = tweak_data.menu.pd2_large_font_size,
+		font = tweak_data.menu.pd2_large_font,
+		color = tweak_data.screen_colors.text
+	})
+	local _, _, w, h = title_text:text_rect()
+
+	title_text:set_size(w, h)
+
 	self._fullscreen_panel = self._fullscreen_ws:panel():panel({
 		name = "fullscreen"
 	})
@@ -108,16 +121,6 @@ function AchievementsGui:init(ws, fullscreen_ws, node)
 		MenuBackdropGUI.animate_bg_text(self, bg_back)
 	end
 
-	self._panel:bitmap({
-		texture = "guis/textures/test_blur_df",
-		layer = -1,
-		halign = "scale",
-		render_template = "VertexColorTexturedBlur3D",
-		valign = "scale",
-		w = fullscreen_ws:panel():w(),
-		h = fullscreen_ws:panel():h()
-	})
-	
 	self._main_panel = ToggleInputPanel:new(self, {
 		input = true
 	})
@@ -163,21 +166,14 @@ function AchievementsGui:_update_achievements_track(ach_track)
 
 	local num_ach_unlocked = count(IngameAchievements.awards, self._achievements)
 	local num_ach_total = table.size(self._achievements) or 0
-	local tracked_text = IngameAchievements.awards.tracker and string.format(", %s: %s", "Tracked", #IngameAchievements.awards.tracker) or ""
+	local tracked_text = IngameAchievements.awards.tracker and string.format(", %s: %s", managers.localization:text("ingame_achievements_tracked"), #IngameAchievements.awards.tracker) or ""
 	ach_track:set_text(managers.localization:text("menu_trophy_unlocked") .. string.format(": (%d / %d)", num_ach_unlocked, num_ach_total) .. tracked_text)
 	make_fine_text(ach_track)
 end
 
 function AchievementsGui:_create_achievements_list()
-	local title_text = self._main_panel:text({
-		layer = 1,
-		text = managers.localization:text("menu_ingame_achievements"),
-		font = tweak_data.menu.pd2_large_font,
-		font_size = tweak_data.menu.pd2_large_font_size,
-		color = tweak_data.screen_colors.text
-	})
-
-	make_fine_text(title_text)
+	managers.menu:set_and_send_sync_state("payday")
+	
 	local ach_track = self._main_panel:text({
 		name = "ach_track",
 		x = padding,
@@ -193,10 +189,10 @@ function AchievementsGui:_create_achievements_list()
 		vertical = "top",
 	})
 	make_fine_text(ach_track)
-	ach_track:set_top(title_text:bottom() + 5)
+	ach_track:set_top(self._panel:child("title_text"):bottom() + 5)
 	self:_update_achievements_track(ach_track)
 	
-	local t_y = title_text:bottom() + 30
+	local t_y = self._panel:child("title_text"):bottom() + 30
 
 	self._scroll = ScrollItemList:new(self._main_panel, {
 		scrollbar_padding = 10,

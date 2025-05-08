@@ -60,5 +60,5 @@ function HUDStatsScreen:create_tracker()
 		left_panel:child("loot_wrapper_panel"):show()
 	end
 	
-	PrintTable(managers.statistics._global.session.killed_by_weapon)
+	PrintTable(managers.statistics._global.session.killed.total)
 end
