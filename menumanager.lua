@@ -5,6 +5,28 @@ IngameAchievements._mod_path = IngameAchievements._mod_path or ModPath
 IngameAchievements._setting_path = SavePath .. "IngameAchievements.json"
 IngameAchievements.awards = IngameAchievements.awards or {}
 
+function IngameAchievements:compare_awards_progress(data, ach_table)
+	for achievement, value in pairs(data or {}) do
+		if ach_table then
+			if type(ach_table[achievement]) == "nil" then
+				ach_table[achievement] = value
+			elseif type(ach_table[achievement]) == "table" and type(value) == "table" then
+				for ach_stat, stat in pairs(value) do
+					if type(ach_table[achievement][ach_stat]) == "nil" then
+						ach_table[achievement][ach_stat] = stat
+					elseif type(ach_table[achievement][ach_stat]) == "number" and type(stat) == "number" then
+						ach_table[achievement][ach_stat] = math.max(ach_table[achievement][ach_stat], stat)
+					end
+				end
+			end
+		end
+	end
+end
+
+function IngameAchievements:tracked(name)
+	return table.contains(IngameAchievements.awards.tracker or {}, name)
+end
+
 function IngameAchievements:Save()
 	local file = io.open(self._setting_path, "w+")
 	if file then
@@ -24,10 +46,8 @@ local function Load()
 end
 
 Load()
-
-function IngameAchievements:tracked(name)
-	return table.contains(IngameAchievements.awards.tracker or {}, name)
-end
+IngameAchievements:compare_awards_progress(Global.ingame_achievements, IngameAchievements.awards)
+Global.ingame_achievements = IngameAchievements.awards
 
 local function make_fine_text(text)
 	local x, y, w, h = text:text_rect()
