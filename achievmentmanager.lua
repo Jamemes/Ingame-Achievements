@@ -34,24 +34,34 @@ local function award_achievement(id)
 end
 
 Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.AchievmentManager.award_progress", function(self, stat, value)
-	if not IngameAchievements.awards[stat:gsub("_stats", ""):gsub("_stat", "")] then
-		IngameAchievements.awards.stats = IngameAchievements.awards.stats or {}
-		IngameAchievements.awards.stats[stat] = (IngameAchievements.awards.stats[stat] or 0) + (value or 1)
-		IngameAchievements:Save()
-	end
+	local persistent_stat_unlocks = tweak_data.achievement.persistent_stat_unlocks or tweak_data.persistent_stat_unlocks
+	local max_stat = persistent_stat_unlocks[stat] and persistent_stat_unlocks[stat][1].at or 100
 
-	local max_stat = tweak_data.persistent_stat_unlocks[stat] and tweak_data.persistent_stat_unlocks[stat][1].at or 100
-	if IngameAchievements.awards.stats and IngameAchievements.awards.stats[stat] and IngameAchievements.awards.stats[stat] >= max_stat then
-		IngameAchievements.awards.stats[stat] = nil
-		if table.size(IngameAchievements.awards.stats) == 0 then
-			IngameAchievements.awards.stats = nil
+	if persistent_stat_unlocks[stat] then
+		if not IngameAchievements.awards[persistent_stat_unlocks[stat][1].award] then
+			IngameAchievements.awards.stats = IngameAchievements.awards.stats or {}
+			IngameAchievements.awards.stats[stat] = (IngameAchievements.awards.stats[stat] or 0) + (value or 1)
+			
+			if HudChallengeNotification then
+				local title = managers.localization:text("ingame_achievements_progress") .. managers.localization:to_upper_text("achievement_" .. persistent_stat_unlocks[stat][1].award)
+				local text = managers.localization:text("achievement_".. persistent_stat_unlocks[stat][1].award .. "_desc"):gsub(max_stat, tostring(max_stat - IngameAchievements.awards.stats[stat]))
+				HudChallengeNotification.queue(title, text, "")
+			end
+			
+			IngameAchievements:Save()
 		end
-		award_achievement(tweak_data.persistent_stat_unlocks[stat][1].award)
-	end
-	
 
-	if managers.hud then
-		managers.hud:loot_value_updated()
+		if IngameAchievements.awards.stats and IngameAchievements.awards.stats[stat] and IngameAchievements.awards.stats[stat] >= max_stat then
+			IngameAchievements.awards.stats[stat] = nil
+			if table.size(IngameAchievements.awards.stats) == 0 then
+				IngameAchievements.awards.stats = nil
+			end
+			award_achievement(persistent_stat_unlocks[stat] and persistent_stat_unlocks[stat][1].award or {stat})
+		end
+	
+		if managers.hud then
+			managers.hud:loot_value_updated()
+		end
 	end
 end)
 

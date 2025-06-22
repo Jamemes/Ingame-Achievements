@@ -20,6 +20,7 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 		menu_ingame_achievements = cus .. ach,
 		ingame_achievements_tracked = "Tracked",
 		ingame_achievements_failed = "Failed!",
+		ingame_achievements_progress = "Achievement Progress: ",
 	})
 
 	if Idstring("russian"):key() == SystemInfo:language():key() then
@@ -32,6 +33,7 @@ Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", 
 			menu_ingame_achievements = cus .. ach,
 			ingame_achievements_tracked = "Отслеживается",
 			ingame_achievements_failed = "Провалено!",
+			ingame_achievements_progress = "Прогресс достижения: ",
 		})
 	end
 end)
