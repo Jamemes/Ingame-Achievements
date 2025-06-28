@@ -38,13 +38,14 @@ Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.Achievment
 	local max_stat = persistent_stat_unlocks[stat] and persistent_stat_unlocks[stat][1].at or 100
 
 	if persistent_stat_unlocks[stat] then
-		if not IngameAchievements.awards[persistent_stat_unlocks[stat][1].award] then
+		local award = persistent_stat_unlocks[stat][1].award
+		if not IngameAchievements.awards[award] or IngameAchievements:tracked(award) then
 			IngameAchievements.awards.stats = IngameAchievements.awards.stats or {}
 			IngameAchievements.awards.stats[stat] = (IngameAchievements.awards.stats[stat] or 0) + (value or 1)
 			
 			if HudChallengeNotification then
-				local title = managers.localization:text("ingame_achievements_progress") .. managers.localization:to_upper_text("achievement_" .. persistent_stat_unlocks[stat][1].award)
-				local text = managers.localization:text("achievement_".. persistent_stat_unlocks[stat][1].award .. "_desc"):gsub(max_stat, tostring(max_stat - IngameAchievements.awards.stats[stat]))
+				local title = managers.localization:text("ingame_achievements_progress") .. managers.localization:to_upper_text("achievement_" .. award)
+				local text = managers.localization:text("achievement_".. award .. "_desc"):gsub(max_stat, tostring(max_stat - IngameAchievements.awards.stats[stat]))
 				HudChallengeNotification.queue(title, text, "")
 			end
 			
@@ -56,7 +57,7 @@ Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.Achievment
 			if table.size(IngameAchievements.awards.stats) == 0 then
 				IngameAchievements.awards.stats = nil
 			end
-			award_achievement(persistent_stat_unlocks[stat] and persistent_stat_unlocks[stat][1].award or {stat})
+			award_achievement(award)
 		end
 	
 		if managers.hud then
