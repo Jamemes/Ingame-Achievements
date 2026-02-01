@@ -1,39 +1,20 @@
-Hooks:Add("LocalizationManagerPostInit", "IngameAchievements_ach_localization", function(...)
-	local ach = "Achievements"
-	local cus = tweak_data.achievement and tweak_data.achievement.visual and "InGame " or ""
-	
-	if cus == "" then
-		local function localize(lang)
-			dofile(IngameAchievements._mod_path .. "loc/" .. lang .. ".txt")
-			LocalizationManager:add_localized_strings(Global.achievements_loc)
-			Global.achievements_loc = nil
-		end
-		
-		if Idstring("russian"):key() == SystemInfo:language():key() then
-			localize("russian")
-		else
-			localize("english")
-		end
-	end
-	
+local IngameAchievements_path = ModPath
+Hooks:Add("LocalizationManagerPostInit", "IngameAchievements.LocalizationManagerPostInit", function(self, ...)
 	LocalizationManager:add_localized_strings({
-		menu_ingame_achievements = cus .. ach,
-		ingame_achievements_tracked = "Tracked",
-		ingame_achievements_failed = "Failed!",
-		ingame_achievements_progress = "Achievement Progress: ",
+		ingame_achievements_progress = 'Achievement progress: ',
 	})
 
 	if Idstring("russian"):key() == SystemInfo:language():key() then
-		ach = "Достижения"
-		if cus ~= "" then
-			cus = "Игровые "
-		end
-		
 		LocalizationManager:add_localized_strings({
-			menu_ingame_achievements = cus .. ach,
-			ingame_achievements_tracked = "Отслеживается",
-			ingame_achievements_failed = "Провалено!",
-			ingame_achievements_progress = "Прогресс достижения: ",
+			ingame_achievements_progress = 'Прогресс достижения: ',
 		})
+	end
+
+	if not self:exists("menu_achievements") then 
+		dofile(IngameAchievements_path .. string.lower("loc/english.lua"))
+
+		if Idstring("russian"):key() == SystemInfo:language():key() then
+			dofile(IngameAchievements_path .. string.lower("loc/russian.lua"))
+		end
 	end
 end)

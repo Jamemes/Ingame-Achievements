@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<mod>
+	<assets base_path="assets/">
+		<group name="guis/dlcs/trk/textures/pd2/">
+				<file :name="unlocked.texture"/>
+				<file :name="star.texture"/>
+				<file :name="star_small.texture"/>
+				<file :name="star_button.texture"/>
+				<file :name="skills_slot_unlock_icon.texture"/>
+				<file :name="old_hoxton_unlock_icon.texture"/>
+				<file :name="locked.texture"/>
+				<file :name="lock.texture"/>
+				<file :name="eye.texture"/>
+				<file :name="eye_small.texture"/>
+				<file :name="circle_outside.texture"/>
+				<file :name="circle_inside.texture"/>
+				<file :name="achievements_atlas8.texture"/>
+				<file :name="achievements_atlas7.texture"/>
+				<file :name="achievements_atlas6.texture"/>
+				<file :name="achievements_atlas5.texture"/>
+				<file :name="achievements_atlas4.texture"/>
+				<file :name="achievements_atlas3.texture"/>
+				<file :name="achievements_atlas2.texture"/>
+				<file :name="achievements_atlas.texture"/>
+				<file :name="achievements_atlas_old_diffs.texture"/>
+				<file :name="achievements_atlas_infamy_1_0.texture"/>
+		</group>
+	</assets>
+</mod>
