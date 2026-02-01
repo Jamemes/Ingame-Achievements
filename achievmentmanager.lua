@@ -78,7 +78,7 @@ local function check_progress(award)
 
 	for id, stat in pairs(tweak_data.achievement.persistent_stat_unlocks) do
 		if award == stat[1].award then
-			return (self:achievement_progress(id) or 0) >= stat[1].at 
+			return (managers.achievment:achievement_progress(id) or 0) >= stat[1].at 
 		end
 	end
 
