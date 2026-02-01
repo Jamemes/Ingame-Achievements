@@ -1,5 +1,5 @@
 Hooks:Add("CoreMenuData.LoadDataMenu", "AchievementsGui.CoreMenuData.LoadDataMenu", function(menu_id, menu)
-	if AchievmentManager.IngameAchievments or menu.id == "pause_menu" then
+	if menu.id == "pause_menu" then
 		local node = {
 			no_menu_wrapper = true,
 			_meta = "node",
@@ -82,9 +82,5 @@ Hooks:Add("CoreMenuData.LoadDataMenu", "AchievementsGui.CoreMenuData.LoadDataMen
 end)
 
 Hooks:Add("MenuManagerBuildCustomMenus", "AchievementListGui.MenuManagerBuildCustomMenus", function(menu_manager, nodes)
-	if AchievmentManager.IngameAchievments then
-		MenuHelper:AddMenuItem(nodes.main, "achievements", "menu_achievements", "menu_achievements_help", "divider_test2", "after")
-		MenuHelper:AddMenuItem(nodes.lobby, "achievements", "menu_achievements", "menu_achievements_help", "divider_test2", "after")
-	end
 	MenuHelper:AddMenuItem(nodes.pause, "achievements", "menu_achievements", "menu_achievements_help", Global.game_settings.single_player and "options" or "edit_game_settings", "after")
 end)

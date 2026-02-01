@@ -1,7 +1,3 @@
-if type(AchievementListGui) == "nil" then
-	dofile(ModPath .. string.lower("components/achievementlistgui.lua"))
-end
-
 Hooks:PostHook(AchievementListGui, "init", "IngameAchievments.AchievementListGui.init.PostHook", function(self)
 	self:set_layer(tweak_data.gui.MENU_COMPONENT_LAYER)
 	if managers.network:session() and managers.network:session():_local_peer_in_lobby() then
@@ -9,7 +5,6 @@ Hooks:PostHook(AchievementListGui, "init", "IngameAchievments.AchievementListGui
 	end
 end)
 
-	-- managers.achievment.fetch_achievments()
 Hooks:PostHook(AchievementListGui, "show_blur", "IngameAchievments.AchievementListGui.show_blur", function(self)
 	self._blur:set_layer(tweak_data.gui.MENU_COMPONENT_LAYER) 
 end)
