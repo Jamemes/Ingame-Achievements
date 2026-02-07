@@ -56,6 +56,36 @@ if not AchievmentManager.MAX_TRACKED then
 
 		return rtn
 	end
+
+	function AchievmentManager:_award_achievement(t)
+		if t.stat then
+			managers.achievment:award_progress(t.stat)
+		elseif t.award then
+			managers.achievment:award(t.award)
+			if managers.generic_side_jobs then
+				managers.generic_side_jobs:award(t.award)
+			end
+			if managers.event_jobs then
+				managers.event_jobs:award(t.award)
+			end
+		elseif t.challenge_stat then
+			managers.challenge:award_progress(t.challenge_stat)
+		elseif t.challenge_award then
+			managers.challenge:award(t.challenge_award)
+		elseif t.trophy_stat then
+			managers.custom_safehouse:award(t.trophy_stat)
+		elseif managers.story and t.story then
+			managers.story:award(t.story)
+		else
+			return false
+		end
+
+		return true
+	end
+
+	function AchievmentManager:award_data(t)
+		return self:_award_achievement(t)
+	end
 end
 
 local function award_achievement(self, id)
@@ -64,7 +94,8 @@ local function award_achievement(self, id)
 		self.achievments[id].unlock_time = os.time()
 	end
 
-	if not self.achievments[id].awarded or table.contains(self._forced, id) then
+	if not self.achievments[id].awarded or
+	 table.contains(self._forced, id) then
 		self:track(id, false)
 		local head = managers.localization:to_upper_text("hud_achieved_popup")
 		local text = managers.localization:to_upper_text("achievement_" .. id) .. "\n" .. managers.localization:text("achievement_".. id .. "_desc")
@@ -209,4 +240,23 @@ function AchievmentManager.fetch_achievments(progress)
 
 	managers.network.account:achievements_fetched()
 	managers.achievment.oldest_achievement_date = oldest_achievement_date or -1
+	managers.achievment:check_autounlock_achievements()
+end
+
+function AchievmentManager:check_autounlock_achievements()
+	local level = managers.experience:current_level()
+
+	for _, d in pairs(tweak_data.achievement.level_achievements) do
+		if d.level and d.level <= level then
+			managers.achievment:award_data(d)
+		end
+	end
+
+	if Global.experience_manager.rank then
+		for i = 1, Application:digest_value(Global.experience_manager.rank, false) do
+			if tweak_data.achievement.infamous[i] then
+				managers.achievment:award(tweak_data.achievement.infamous[i])
+			end
+		end
+	end
 end

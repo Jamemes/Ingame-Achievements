@@ -10323,6 +10323,7 @@ if type(init_auto_generated_achievement_data) ~= "function" then
 				jobs = {"kosugi"}
 			}
 		}
+		local nar_job = tweak_data.narrative.jobs
 		self.job_list = {
 			vlad = {
 				"ukrainian_job_prof",
@@ -10334,18 +10335,25 @@ if type(init_auto_generated_achievement_data) ~= "function" then
 				"jolly",
 				"cane",
 				"peta",
+				"peta_prof",
 				"moon"
 			},
 			hector = {
-				"watchdogs_wrapper",
+				nar_job.watchdogs_wrapper and "watchdogs_wrapper" or "watchdogs",
+				nar_job.watchdogs_wrapper_prof and "watchdogs_wrapper_prof" or "watchdogs_prof",
 				"alex",
-				"firestarter"
+				"alex_prof",
+				"firestarter",
+				"firestarter_prof"
 			},
 			the_elephant = {
 				"framing_frame",
-				"welcome_to_the_jungle_wrapper_prof",
+				"framing_frame_prof",
+				nar_job.welcome_to_the_jungle_wrapper_prof and "welcome_to_the_jungle_wrapper_prof" or "welcome_to_the_jungle_prof",
 				"election_day",
-				"born"
+				"election_day_prof",
+				"born",
+				"born_pro"
 			},
 			bain = {
 				"jewelry_store",
@@ -10370,7 +10378,9 @@ if type(init_auto_generated_achievement_data) ~= "function" then
 			the_dentist = {
 				"big",
 				"mia",
+				"mia_prof",
 				"hox",
+				"hox_prof",
 				"mus",
 				"hox_3",
 				"kenaz"
@@ -11774,6 +11784,20 @@ for stat, unlocks in pairs(tweak_data.achievement.persistent_stat_unlocks) do
 			data.progress.get = function()
 				return Global.achievment_manager and Global.achievment_manager.achievement_progress and Global.achievment_manager.achievement_progress[stat] or 0
 			end
+		end
+	end
+end
+
+tweak_data.achievement.jobs_to_complete_by_achievements = {}
+for _, stat in pairs(tweak_data.achievement.complete_heist_achievements) do
+	if table.size(stat) == (stat.one_down and 4 or 3) and stat.award and (stat.job or stat.jobs) and stat.difficulty then
+		local one_down = stat.one_down and "_OD" or ""
+		if stat.jobs then
+			for _, job in pairs(stat.jobs) do
+				tweak_data.achievement.jobs_to_complete_by_achievements[job .. "_" .. stat.difficulty[1] .. one_down] = stat.award
+			end
+		elseif stat.job then
+			tweak_data.achievement.jobs_to_complete_by_achievements[stat.job .. "_" .. stat.difficulty[1] .. one_down] = stat.award
 		end
 	end
 end

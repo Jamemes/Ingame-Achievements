@@ -626,10 +626,11 @@ function add_achievement_detail_text(scroll, placer, visual, info, font_color)
 			local job_data = tweak_data.narrative:job_data(id)
 
 			if job_data then
+				local pro_job = job_data.professional and " (PRO JOB)" or ""
 				if not text then
-					text = managers.localization:text("menu_achievements_levels_left_intro") .. managers.localization:text(job_data.name_id)
+					text = managers.localization:text("menu_achievements_levels_left_intro") .. managers.localization:text(job_data.name_id) .. pro_job
 				else
-					text = text .. ", " .. managers.localization:text(job_data.name_id)
+					text = text .. ", " .. managers.localization:text(job_data.name_id) .. pro_job
 				end
 			end
 		end
