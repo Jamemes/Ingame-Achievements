@@ -94,8 +94,7 @@ local function award_achievement(self, id)
 		self.achievments[id].unlock_time = os.time()
 	end
 
-	if not self.achievments[id].awarded or
-	 table.contains(self._forced, id) then
+	if not self.achievments[id].awarded or table.contains(self._forced, id) then
 		self:track(id, false)
 		local head = managers.localization:to_upper_text("hud_achieved_popup")
 		local text = managers.localization:to_upper_text("achievement_" .. id) .. "\n" .. managers.localization:text("achievement_".. id .. "_desc")
