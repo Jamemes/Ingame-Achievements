@@ -151,4 +151,23 @@ function AchievmentManager.fetch_achievments(progress)
 
 	managers.network.account:achievements_fetched()
 	managers.achievment.oldest_achievement_date = oldest_achievement_date or -1
+	managers.achievment:check_autounlock_achievements()
+end
+
+function AchievmentManager:check_autounlock_achievements()
+	local level = managers.experience:current_level()
+
+	for _, d in pairs(tweak_data.achievement.level_achievements) do
+		if d.level and d.level <= level then
+			managers.achievment:award_data(d)
+		end
+	end
+
+	if Global.experience_manager.rank then
+		for i = 1, Application:digest_value(Global.experience_manager.rank, false) do
+			if tweak_data.achievement.infamous[i] then
+				managers.achievment:award(tweak_data.achievement.infamous[i])
+			end
+		end
+	end
 end
