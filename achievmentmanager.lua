@@ -42,7 +42,7 @@ Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.Achievment
 			self:save_progress(stat, (self:achievement_progress(stat) or 0) + (value or 1))
 			if HudChallengeNotification and max_stat ~= self:achievement_progress(stat) then
 				local title = managers.localization:text("ingame_achievements_progress") .. managers.localization:to_upper_text("achievement_" .. award)
-				local text = managers.localization:text("achievement_".. award .. "_desc"):gsub(max_stat, tostring(max_stat - self:achievement_progress(stat)))
+				local text = managers.localization:text("achievement_".. award .. "_desc"):gsub(max_stat, tostring(math.max(max_stat - self:achievement_progress(stat), 0)))
 				HudChallengeNotification.queue(title, text, "")
 			end
 		end
