@@ -1,13 +1,13 @@
 [
     {
         "ident": "ingame-achievements-CUS",
-        "version": "7.2",
+        "version": "7.3",
         "patchnotes_url": "https://github.com/Jamemes/Ingame-Achievements/commits/main",
         "download_url": "https://github.com/Jamemes/Ingame-Achievements/archive/refs/heads/main.zip"
     },
     {
         "ident": "ingame-achievements-lite",
-        "version": "7.2",
+        "version": "7.3",
         "patchnotes_url": "https://github.com/Jamemes/Ingame-Achievements/commits/lite",
         "download_url": "https://github.com/Jamemes/Ingame-Achievements/archive/refs/heads/lite.zip"
     }
