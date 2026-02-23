@@ -1,4 +1,3 @@
-local 
 LocalizationManager:add_localized_strings({
 	achievement_ameno_1_additional = 'Для выполнения достижения необходимо играть с самого начала контракта.',
 	achievement_ameno_1_desc = 'Завершите контракт "Ночной клуб" на любом уровне сложности так, чтобы все члены команды использовали пилу как первичное и вторичное оружие.',
@@ -1803,7 +1802,7 @@ LocalizationManager:add_localized_strings({
 	menu_continue_btn = "ПРОДОЛЖИТЬ $MY_BTN;",
 })
 
-if not tweak_data.difficulty_name_ids.sm_wish then
+if not tweak_data.group_ai.enemy_spawn_groups.tac_swat_rifle_flank then
 	LocalizationManager:add_localized_strings({
 		achievement_bat_1_desc = 'Завершите контракт "Бриллиант" на уровне сложности "Жажда смерти".',
 		achievement_berry_1_desc = 'Завершите ограбление "У подножия горы" на уровне сложности "Жажда смерти".',

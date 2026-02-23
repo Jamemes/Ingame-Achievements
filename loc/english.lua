@@ -1805,7 +1805,7 @@ LocalizationManager:add_localized_strings({
     menu_continue_btn = "CONTINUE $MY_BTN;",
 })
 
-if not tweak_data.difficulty_name_ids.sm_wish then
+if not tweak_data.group_ai.enemy_spawn_groups.tac_swat_rifle_flank then
 	LocalizationManager:add_localized_strings({
 		achievement_bat_1_desc = 'Complete The Diamond job on the Death Wish difficulty.',
 		achievement_berry_1_desc = 'Complete the Beneath the Mountain job on the Death Wish difficulty.',

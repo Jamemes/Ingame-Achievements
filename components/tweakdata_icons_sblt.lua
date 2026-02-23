@@ -606,7 +606,7 @@ if tweak_data.infamy and #tweak_data.infamy.tree == 5 then
 	tweak_data.hud_icons.C_All_H_All_Infamy_05 = {texture = "guis/dlcs/trk/textures/pd2/achievements_atlas_infamy_1_0", texture_rect = {261, 0, 85, 85}}
 end
 
-if not tweak_data.difficulty_name_ids.sm_wish then
+if not tweak_data.group_ai.enemy_spawn_groups.tac_swat_rifle_flank then
 	local old_diff_icons = {
 		"C_Bain_H_All_AllDiffs_D5",
 		"C_Bain_H_Arena_AllDiffs_D5",

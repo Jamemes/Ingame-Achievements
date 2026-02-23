@@ -45,6 +45,7 @@ if type(TweakData.get_raw_value) ~= "function" then
 end
 
 if type(init_auto_generated_achievement_data) ~= "function" then
+	local od_exist = tweak_data.group_ai.enemy_spawn_groups.tac_swat_rifle_flank
 	if (blt and blt.db_create_entry) or (DB and DB.create_entry) then
 		dofile(ModPath .. string.lower("components/tweakdata_icons_sblt.lua"))
 	else
@@ -9183,22 +9184,22 @@ if type(init_auto_generated_achievement_data) ~= "function" then
 			},
 			complete_pines_normal = {
 				award = "deer_1",
-				difficulty = tweak_data.difficulty_name_ids.sm_wish and normal_and_above or {"normal"},
+				difficulty = od_exist and normal_and_above or {"normal"},
 				jobs = {"pines"}
 			},
 			complete_pines_hard = {
 				award = "deer_2",
-				difficulty = tweak_data.difficulty_name_ids.sm_wish and hard_and_above or {"hard"},
+				difficulty = od_exist and hard_and_above or {"hard"},
 				jobs = {"pines"}
 			},
 			complete_pines_veryhard = {
 				award = "deer_3",
-				difficulty = tweak_data.difficulty_name_ids.sm_wish and veryhard_and_above or {"overkill"},
+				difficulty = od_exist and veryhard_and_above or {"overkill"},
 				jobs = {"pines"}
 			},
 			complete_pines_overkill = {
 				award = "deer_4",
-				difficulty = tweak_data.difficulty_name_ids.sm_wish and overkill_and_above or {"overkill_145"},
+				difficulty = od_exist and overkill_and_above or {"overkill_145"},
 				jobs = {"pines"}
 			},
 			complete_crojob_for_all = {
@@ -10773,17 +10774,17 @@ if type(init_auto_generated_achievement_data) ~= "function" then
 			skull_hard = {
 				award = "death_27",
 				contact = "all",
-				difficulty = tweak_data.difficulty_name_ids.sm_wish and hard_and_above or {"hard"}
+				difficulty = od_exist and hard_and_above or {"hard"}
 			},
 			skull_very_hard = {
 				award = "death_28",
 				contact = "all",
-				difficulty = tweak_data.difficulty_name_ids.sm_wish and veryhard_and_above or {"overkill"}
+				difficulty = od_exist and veryhard_and_above or {"overkill"}
 			},
 			skull_overkill = {
 				award = "death_29",
 				contact = "all",
-				difficulty = tweak_data.difficulty_name_ids.sm_wish and overkill_and_above or {"overkill_145"}
+				difficulty = od_exist and overkill_and_above or {"overkill_145"}
 			},
 			skull_easywish = {
 				award = "pick_66",
@@ -11465,7 +11466,7 @@ if type(init_auto_generated_achievement_data) ~= "function" then
 			}
 		}
 
-		if tweak_data.difficulty_name_ids.easy_wish then
+		if od_exist then
 			table.insert(self.tags.difficulty, "mayhem")
 		end
 		
@@ -11473,7 +11474,7 @@ if type(init_auto_generated_achievement_data) ~= "function" then
 			table.insert(self.tags.difficulty, "death_wish")
 		end
 
-		if tweak_data.difficulty_name_ids.sm_wish then
+		if od_exist then
 			table.insert(self.tags.difficulty, "one_down")
 		end
 
@@ -11779,10 +11780,9 @@ end
 for stat, unlocks in pairs(tweak_data.achievement.persistent_stat_unlocks) do
 	for _, v in pairs(unlocks) do
 		local data = tweak_data.achievement.visual[v.award]
-
 		if type(data.progress) == "table" then
 			data.progress.get = function()
-				return Global.achievment_manager and Global.achievment_manager.achievement_progress and Global.achievment_manager.achievement_progress[stat] or 0
+				return Global.blackmarket_manager and Global.blackmarket_manager.IngameAchievments and Global.blackmarket_manager.IngameAchievments[stat] or 0
 			end
 		end
 	end
