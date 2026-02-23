@@ -1,17 +1,19 @@
 require("lib/managers/hud/HudChallengeNotification")
 
 local function award_achievement(self, id)
-	if not self:achievement_progress(id) then
-		self:save_progress(id, os.time())
-		self.achievments[id].unlock_time = os.time()
-	end
+	if self.achievments[id] then
+		if not self:achievement_progress(id) then
+			self:save_progress(id, os.time())
+			self.achievments[id].unlock_time = os.time()
+		end
 
-	if not self.achievments[id].awarded or table.contains(self._forced, id) then
-		self:track(id, false)
-		local head = managers.localization:to_upper_text("hud_achieved_popup")
-		local text = managers.localization:to_upper_text("achievement_" .. id) .. "\n" .. managers.localization:text("achievement_".. id .. "_desc")
-		local icon = tweak_data.achievement.visual and tweak_data.achievement.visual[id] and tweak_data.achievement.visual[id].icon_id
-		HudChallengeNotification.queue(head, text, icon)
+		if not self.achievments[id].awarded or table.contains(self._forced, id) then
+			self:track(id, false)
+			local head = managers.localization:to_upper_text("hud_achieved_popup")
+			local text = managers.localization:to_upper_text("achievement_" .. id) .. "\n" .. managers.localization:text("achievement_".. id .. "_desc")
+			local icon = tweak_data.achievement.visual and tweak_data.achievement.visual[id] and tweak_data.achievement.visual[id].icon_id
+			HudChallengeNotification.queue(head, text, icon)
+		end
 	end
 end
 
@@ -40,9 +42,9 @@ Hooks:PreHook(AchievmentManager, "award_progress", "IngameAchievments.Achievment
 		local award = persistent_stat_unlocks[stat][1].award
 		if not self:achievement_progress(award) or table.contains(self._forced, award) then
 			self:save_progress(stat, (self:achievement_progress(stat) or 0) + (value or 1))
-			if HudChallengeNotification and max_stat ~= self:achievement_progress(stat) then
+			if HudChallengeNotification and max_stat > self:achievement_progress(stat) and table.contains(self._forced or {}, award) then
 				local title = managers.localization:text("ingame_achievements_progress") .. managers.localization:to_upper_text("achievement_" .. award)
-				local text = managers.localization:text("achievement_".. award .. "_desc"):gsub(max_stat, tostring(math.max(max_stat - self:achievement_progress(stat), 0)))
+				local text = managers.localization:text("achievement_".. award .. "_desc"):gsub(max_stat, tostring(max_stat - self:achievement_progress(stat)))
 				HudChallengeNotification.queue(title, text, "")
 			end
 		end

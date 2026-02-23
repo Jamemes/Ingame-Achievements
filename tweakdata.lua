@@ -4,7 +4,7 @@ for stat, unlocks in pairs(tweak_data.achievement.persistent_stat_unlocks) do
 
 		if type(data.progress) == "table" then
 			data.progress.get = function()
-				return Global.achievment_manager and Global.achievment_manager.achievement_progress and Global.achievment_manager.achievement_progress[stat] or 0
+				return Global.blackmarket_manager and Global.blackmarket_manager.IngameAchievments and Global.blackmarket_manager.IngameAchievments[stat] or 0
 			end
 		end
 	end

@@ -4,7 +4,7 @@ function StatisticsManager:completed_job(job_id, difficulty, require_one_down)
 	stat_name = stat_name .. "_" .. tostring(job_id)
 	stat_name = stat_name .. "_" .. tostring(difficulty)
 	stat_name = stat_name .. (require_one_down and "_od" or "")
-	if Global.blackmarket_manager.IngameAchievments[stat_name] then
+	if not Global.blackmarket_manager.IngameAchievments or (Global.blackmarket_manager.IngameAchievments and Global.blackmarket_manager.IngameAchievments[stat_name]) then
 		return data(self, job_id, difficulty, require_one_down)
 	else
 		return 0
