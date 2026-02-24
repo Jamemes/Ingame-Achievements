@@ -87,6 +87,6 @@ end)
 
 Hooks:PreHook(MenuCallbackHandler, "_dialog_clear_progress_yes", "IngameAchievments.MenuCallbackHandler._dialog_clear_progress_yes", function(self)
 	Global.blackmarket_manager.IngameAchievments = {}
-	managers.achievment:_parse_achievments(SystemInfo:distribution() == Idstring("STEAM") and "Steam" or "Epic")
+	managers.achievment:_parse_achievments(Global.epic and "Epic" or "Steam")
 	Global.achievment_manager.achievments = managers.achievment.achievments
 end)
