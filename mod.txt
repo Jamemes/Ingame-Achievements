@@ -2,7 +2,7 @@
 	"name": "Ingame Achievements",
 	"description": "Ingame Achievements.",
 	"author": "James",
-	"version": "7.4",
+	"version": "7.4.1",
 	"hooks": [
 	
 		{"hook_id": "lib/states/menumainstate",						"script_path": "menumainstate.lua"},
