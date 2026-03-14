@@ -22,7 +22,7 @@ Hooks:PreHook(StatisticsManager, "stop_session", "IngameAchievments.StatisticsMa
 		stat_name = stat_name .. "_" .. tostring(Global.game_settings.difficulty)
 		stat_name = stat_name .. (Global.game_settings.one_down and "_od" or "")
 
-		if data.type == "victory" and managers.job:on_last_stage() and Global.statistics_manager.playing_from_start and not Global.blackmarket_manager.IngameAchievments[stat_name] then
+		if (Global.blackmarket_manager.IngameAchievments and not Global.blackmarket_manager.IngameAchievments[stat_name]) and data.type == "victory" and managers.job:on_last_stage() and Global.statistics_manager.playing_from_start then
 			Global.blackmarket_manager.IngameAchievments[stat_name] = os.time()
 		end
 	end
