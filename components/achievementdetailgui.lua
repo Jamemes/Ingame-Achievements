@@ -179,7 +179,7 @@ function AchievementDetailGui:init(parent, achievement_data_or_id, back_callback
 		local text_id = self._info.forced and "menu_achievements_forced_notify" or "menu_achievements_tracking_notify"
 
 		placer:add_bottom(self:fine_text({
-			text_id = text_id,
+			text = managers.localization:text(text_id),
 			font = small_font,
 			font_size = small_font_size,
 			color = tweak_data.screen_colors.achievement_grey
